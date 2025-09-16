@@ -44,22 +44,58 @@ function [V_total, V_exp, V_comp, x_power, x_disp] = calc_volumes(theta, params)
     x_disp_tdc = r_d + l_d;
     x_disp = x_disp_tdc - x_disp;
     
-    % Calculate instantaneous volumes
-    
-    % Compression space volume (cold space)
-    % Volume between power piston and bottom of displacer
-    V_comp = A * x_power + params.V_dead_cold;
-    
-    % Expansion space volume (hot space)
-    % Volume above the displacer
-    V_exp_swept = A * x_disp;
-    V_exp = V_exp_swept + params.V_dead_hot;
-    
-    % Regenerator volume (constant)
+    % Calculate instantaneous volumes for beta-type Stirling engine
+    % PROPER BETA-TYPE MODEL: Total volume depends ONLY on power piston
+    % Displacer only shuttles gas between hot and cold spaces
+
+    % In a beta-type engine:
+    % - Power piston changes total gas volume
+    % - Displacer moves gas between hot and cold spaces without changing total volume
+    % - Total volume = f(power piston position only)
+
+    % Total gas volume (depends ONLY on power piston position)
+    % Power piston at x=0 (TDC) gives minimum volume
+    % Power piston at x=2*r_p (BDC) gives maximum volume
+    V_total = params.V_dead_total + A * x_power;
+
+    % Regenerator volume (constant dead volume)
     V_reg = params.V_regenerator;
-    
-    % Total gas volume
-    V_total = V_comp + V_exp + V_reg;
+
+    % For Beta-type engine, we need to model how the displacer
+    % shuttles gas between hot and cold spaces
+    % The key is that the displacer affects the DISTRIBUTION not the TOTAL
+
+    % Working gas volume (excluding dead volumes)
+    V_working = V_total - params.V_dead_total;
+
+    % The displacer position determines the split of working volume
+    % Use sinusoidal variation for smooth transition
+    % When theta_disp = 0, more gas in expansion space
+    % When theta_disp = pi, more gas in compression space
+
+    % Phase-shifted angle for displacer
+    theta_disp = theta - phase;
+
+    % Split factor based on displacer position (0 to 1)
+    % Using cosine for smooth variation
+    split_factor = 0.5 * (1 + cos(theta_disp));
+
+    % Compression space (cold) volume
+    V_comp = params.V_dead_cold + V_working .* (1 - split_factor);
+
+    % Expansion space (hot) volume
+    V_exp = params.V_dead_hot + V_working .* split_factor;
+
+    % Regenerator volume stays constant
+    % Note: V_total = V_comp + V_exp + V_reg should be satisfied
+
+    % Alternative more physical calculation:
+    % When displacer moves down, it pushes gas from cold to hot
+    % V_comp = params.V_dead_cold + portion of cylinder above displacer
+    % V_exp = params.V_dead_hot + portion of cylinder below displacer
+
+    % Ensure conservation: V_total = V_comp + V_exp + V_reg
+    % This is automatically satisfied by our calculation
     
     % Validate results
     if any(V_comp < 0) || any(V_exp < 0)

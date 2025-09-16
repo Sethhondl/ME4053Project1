@@ -45,10 +45,26 @@ function [P, m_total, P_mean] = schmidt_analysis(theta, V_total, V_exp, V_comp, 
     % Calculate total mass from BDC conditions
     denominator_bdc = V_comp_bdc/T_c + V_reg/T_r + V_exp_bdc/T_h;
     m_total = P_bdc * denominator_bdc / R;
-    
+
     % Now calculate pressure throughout the cycle
     denominator = V_comp./T_c + V_reg/T_r + V_exp./T_h;
     P = (m_total * R) ./ denominator;
+
+    % Validate mass conservation (engineering assumption)
+    % Calculate mass in each space throughout cycle
+    m_comp = P .* V_comp / (R * T_c);
+    m_exp = P .* V_exp / (R * T_h);
+    m_reg = P .* V_reg / (R * T_r);
+    m_cycle_total = m_comp + m_exp + m_reg;
+
+    % Check mass conservation
+    mass_variation = (max(m_cycle_total) - min(m_cycle_total)) / m_total;
+    if mass_variation > 1e-6  % Allow for numerical precision
+        warning('Mass conservation violation detected: %.2e relative variation', mass_variation);
+        fprintf('  Total mass should be constant at %.6f g\n', m_total * 1000);
+        fprintf('  But varies between %.6f and %.6f g\n', ...
+                min(m_cycle_total) * 1000, max(m_cycle_total) * 1000);
+    end
     
     % Validate pressure
     if any(P <= 0)

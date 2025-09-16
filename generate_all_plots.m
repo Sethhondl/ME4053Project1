@@ -19,44 +19,94 @@ function generate_all_plots(results, params)
     P_min = min(results.P);
     P_max = max(results.P);
     
-    % Ideal Stirling cycle points (rectangular on P-V diagram)
+    % Ideal Stirling cycle - properly calculated
     % Process 1-2: Isothermal compression at T_cold
-    % Process 2-3: Constant volume heating
+    % Process 2-3: Isochoric (constant volume) heating
     % Process 3-4: Isothermal expansion at T_hot
-    % Process 4-1: Constant volume cooling
-    
-    % Define ideal cycle corners
-    V_ideal = [V_min, V_min, V_max, V_max, V_min];
-    
-    % For ideal isothermal processes: P*V = constant
-    % At hot temperature: P3*V_min = P4*V_max
-    % At cold temperature: P1*V_max = P2*V_min
-    
-    % Approximate ideal pressures based on temperature ratio
-    T_ratio = params.T_hot / params.T_cold;
-    P2 = P_max;  % Maximum pressure at minimum volume, cold temperature
-    P3 = P2 * T_ratio;  % Pressure after constant volume heating
-    P4 = P3 * (V_min/V_max);  % Pressure after isothermal expansion
-    P1 = P4 / T_ratio;  % Pressure after constant volume cooling
-    
-    P_ideal = [P1, P2, P3, P4, P1];
+    % Process 4-1: Isochoric (constant volume) cooling
+
+    % Use actual engine's minimum pressure as reference
+    % This ensures the ideal cycle is in the same pressure range
+    P_min_actual = min(results.P);
+    P_max_actual = max(results.P);
+
+    % Calculate ideal cycle pressures using proper thermodynamics
+    % State 1: Beginning of compression (V_max, T_cold, P1)
+    % Choose P1 to be similar to minimum pressure of actual cycle
+    P1 = P_min_actual * 1.2;  % Slightly above minimum
+
+    % State 2: End of compression (V_min, T_cold, P2)
+    % For isothermal process at T_cold: P1*V_max = P2*V_min
+    P2 = P1 * (V_max / V_min);
+
+    % State 3: After heating (V_min, T_hot, P3)
+    % For isochoric process: P2/T_cold = P3/T_hot
+    P3 = P2 * (params.T_hot / params.T_cold);
+
+    % State 4: After expansion (V_max, T_hot, P4)
+    % For isothermal process at T_hot: P3*V_min = P4*V_max
+    P4 = P3 * (V_min / V_max);
+
+    % Verify P4/T_hot = P1/T_cold (should close the cycle)
+    % This is automatically satisfied by our calculations
+
+    % Isothermal compression: P1*V_max = P2*V_min
+    P2 = P1 * (V_max / V_min);
+
+    % Isochoric heating: P2/T_cold = P3/T_hot
+    P3 = P2 * (params.T_hot / params.T_cold);
+
+    % Isothermal expansion: P3*V_min = P4*V_max
+    P4 = P3 * (V_min / V_max);
+
+    % Create arrays for plotting with more points for isothermal processes
+    n_iso = 50;  % Points for isothermal curves
+
+    % Process 1-2: Isothermal compression
+    V_12 = linspace(V_max, V_min, n_iso);
+    P_12 = P1 * V_max ./ V_12;
+
+    % Process 2-3: Isochoric heating (vertical line)
+    % Create more points for smoother visualization
+    n_vert = 20;
+    V_23 = ones(1, n_vert) * V_min;
+    P_23 = linspace(P2, P3, n_vert);
+
+    % Process 3-4: Isothermal expansion
+    V_34 = linspace(V_min, V_max, n_iso);
+    P_34 = P3 * V_min ./ V_34;
+
+    % Process 4-1: Isochoric cooling (vertical line)
+    % Create more points for smoother visualization
+    V_41 = ones(1, n_vert) * V_max;
+    P_41 = linspace(P4, P1, n_vert);
+
+    % Combine for complete cycle
+    % Add first point again at end to close the cycle
+    V_ideal = [V_12, V_23, V_34, V_41, V_12(1)];
+    P_ideal = [P_12, P_23, P_34, P_41, P_12(1)];
     
     % Plot actual engine cycle
     plot(results.V_total*1000, results.P/1e6, 'b-', 'LineWidth', 2);
     hold on;
-    
+
     % Plot ideal Stirling cycle
     plot(V_ideal*1000, P_ideal/1e6, 'r--', 'LineWidth', 1.5);
-    
-    % Add process labels
-    text(mean([V_min, V_max])*1000, P1/1e6*0.9, '1: Isothermal Compression', ...
+
+    % Note: Direction arrows removed to avoid visual confusion
+    % The cycle direction is clockwise (power-producing)
+
+    % Add process labels with better positioning
+    text(mean([V_min, V_max])*1000, (P1/1e6 + P2/1e6)/2, ...
+         '1→2: Compression (T_{cold})', ...
          'HorizontalAlignment', 'center', 'FontSize', 9);
-    text(V_min*1000*0.95, mean([P2, P3])/1e6, '2: Heating', ...
-         'Rotation', 90, 'HorizontalAlignment', 'center', 'FontSize', 9);
-    text(mean([V_min, V_max])*1000, P3/1e6*1.1, '3: Isothermal Expansion', ...
+    text(V_min*1000*0.97, mean([P2, P3])/1e6, '2→3', ...
+         'HorizontalAlignment', 'right', 'FontSize', 9);
+    text(mean([V_min, V_max])*1000, (P3/1e6 + P4/1e6)/2, ...
+         '3→4: Expansion (T_{hot})', ...
          'HorizontalAlignment', 'center', 'FontSize', 9);
-    text(V_max*1000*1.05, mean([P4, P1])/1e6, '4: Cooling', ...
-         'Rotation', 90, 'HorizontalAlignment', 'center', 'FontSize', 9);
+    text(V_max*1000*1.03, mean([P4, P1])/1e6, '4→1', ...
+         'HorizontalAlignment', 'left', 'FontSize', 9);
     
     % Format plot
     xlabel('Volume (L)', 'FontSize', 12);
@@ -64,11 +114,31 @@ function generate_all_plots(results, params)
     title('P-V Diagram: Stirling Cycle vs Engine Cycle', 'FontSize', 14, 'FontWeight', 'bold');
     legend('Engine Cycle (Schmidt)', 'Ideal Stirling Cycle', 'Location', 'best');
     grid on;
+
+    % Set axis limits to show only positive values
+    xlim([0, max(results.V_total)*1000*1.1]);  % 0 to max volume plus 10% margin
+    ylim([0, max([max(results.P), max(P_ideal)])/1e6*1.1]);  % 0 to max pressure plus 10% margin
     
     % Add work area annotation
-    work_area = abs(trapz(results.V_total, results.P));
-    text(V_min*1000*1.1, P_min/1e6*1.2, ...
-         sprintf('Work = %.1f J', work_area), 'FontSize', 10);
+    work_actual = abs(results.W_indicated);
+    % Calculate ideal Stirling cycle work
+    % W = m*R*(T_hot - T_cold)*ln(V_max/V_min)
+    if isfield(results, 'm_total')
+        work_ideal = results.m_total * params.gas.R * (params.T_hot - params.T_cold) * log(V_max/V_min);
+    else
+        work_ideal = work_actual * 1.5;  % Estimate
+    end
+
+    % Position text in empty area of plot
+    text_x = V_min*1000 + (V_max - V_min)*1000*0.7;
+    text_y = P_min/1e6 + (P_max - P_min)/1e6*0.8;
+    text(text_x, text_y, ...
+         sprintf('Work per Cycle:\nActual = %.1f J\nIdeal = %.1f J', work_actual, work_ideal), ...
+         'FontSize', 9, 'BackgroundColor', 'white', 'EdgeColor', 'black');
+
+    % Add cycle direction indicator in a visible location
+    text(V_max*1000*0.9, P_max/1e6*0.9, 'Clockwise = Power', ...
+         'FontSize', 9, 'FontWeight', 'bold', 'Color', 'blue');
     
     % Save plot
     saveas(gcf, 'results/pv_diagram.png');
@@ -170,7 +240,7 @@ function generate_all_plots(results, params)
     legend('Energy', sprintf('Optimal (%.0f°)', results.optimal_phase), ...
            sprintf('Current (%.0f°)', current_phase), 'Location', 'best');
     grid on;
-    xlim([60, 120]);
+    xlim([45, 135]);  % Expanded range
     
     % Power subplot
     subplot(2,1,2);
@@ -189,7 +259,7 @@ function generate_all_plots(results, params)
     legend('Power', sprintf('Maximum (%.0f°)', ...
            results.optimization.power_curve(opt_idx,1)), 'Location', 'best');
     grid on;
-    xlim([60, 120]);
+    xlim([45, 135]);  % Expanded range
     
     % Save plot
     saveas(gcf, 'results/phase_optimization.png');

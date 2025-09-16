@@ -30,49 +30,53 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
     % Calculate torque for each crank angle
     for i = 1:length(theta)
         %% Power Piston Torque
-        % Force on power piston (pressure difference across piston)
+        % Force on power piston (pressure pushes piston down during expansion)
+        % Positive force when pressure > atmospheric (expansion work)
         F_power = (P(i) - P_atm) * A;  % Force = pressure difference * area
-        
+
         % Crank-slider kinematics for torque
         % Torque = Force * moment arm
-        % Moment arm = r * sin(theta + beta) where beta is connecting rod angle
-        
+
         % Power piston connecting rod angle
         sin_beta_p = r_p * sin(theta(i)) / l_p;
-        cos_beta_p = sqrt(1 - sin_beta_p^2);
-        
-        % Torque from power piston
-        % T = F * r * sin(theta + beta) / cos(beta)
-        % Simplified: T = F * r * (sin(theta) + sin(theta)*cos(theta)*tan(beta))
-        
-        % More accurate formula considering connecting rod angle
         if abs(sin_beta_p) < 1  % Valid geometry
-            T_power(i) = F_power * r_p * (sin(theta(i)) + ...
-                         sin_beta_p * cos(theta(i)) / cos_beta_p);
+            cos_beta_p = sqrt(1 - sin_beta_p^2);
+
+            % Torque from power piston using exact crank-slider formula
+            % T = F * r * sin(theta) / sqrt(1 - (r/l*sin(theta))^2)
+            % This gives positive torque when force acts downward and crank is rotating
+            T_power(i) = F_power * r_p * sin(theta(i)) / cos_beta_p;
         else
             T_power(i) = 0;  % Invalid position
         end
         
         %% Displacer Torque
         % The displacer moves gas between hot and cold spaces
-        % It experiences pressure on both sides, but with different areas
-        
+        % In beta-type engine, displacer experiences pressure differential
+        % between the hot and cold spaces it separates
+
         % Displacer crank angle (with phase shift)
         theta_disp = theta(i) - phase;
-        
-        % For a beta-type engine, the displacer doesn't do work directly
-        % But it affects the pressure distribution
-        % We'll model it as having a small pressure difference
-        
-        % Approximate force on displacer (pressure gradient effect)
-        F_disp = P(i) * A * 0.1;  % Simplified - 10% of pressure force
-        
+
+        % For beta-type engine, the displacer experiences a pressure differential
+        % The pressure acts on the displacer rod area (not full area)
+        % Displacer rod diameter is typically much smaller than bore
+
+        % Estimate displacer rod diameter as ~5% of bore diameter (typical)
+        d_rod = params.cylinder.bore * 0.05;  % Small rod for Beta-type
+        A_rod = pi * (d_rod/2)^2;  % Rod cross-sectional area
+
+        % Force on displacer = pressure difference * rod area
+        % For Beta-type, the displacer experiences minimal force
+        % Only the rod area sees pressure differential
+        F_disp = (P(i) - P_atm) * A_rod;  % Net pressure on rod area only
+
         % Displacer connecting rod angle
         sin_beta_d = r_d * sin(theta_disp) / l_d;
         if abs(sin_beta_d) < 1
             cos_beta_d = sqrt(1 - sin_beta_d^2);
-            T_disp(i) = F_disp * r_d * (sin(theta_disp) + ...
-                        sin_beta_d * cos(theta_disp) / cos_beta_d);
+            % Use same torque formula as power piston
+            T_disp(i) = F_disp * r_d * sin(theta_disp) / cos_beta_d;
         else
             T_disp(i) = 0;
         end

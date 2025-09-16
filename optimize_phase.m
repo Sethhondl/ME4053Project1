@@ -10,8 +10,10 @@ function [optimal_phase, energy_curve, power_curve, efficiency_curve] = optimize
     %   power_curve - power output vs phase angle
     %   efficiency_curve - thermal efficiency vs phase angle
     
-    % Define phase angle range to test (60 to 120 degrees)
-    phase_range = 60:5:120;  % degrees
+    % Define phase angle range to test (45 to 135 degrees)
+    % Literature shows optimal phases can be 57.6°, 80.78°, 90°, 103° etc.
+    % Expanding range to capture all possible optimal values
+    phase_range = 45:5:135;  % degrees - expanded range based on research
     n_phases = length(phase_range);
     
     % Initialize arrays for results

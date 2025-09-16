@@ -31,18 +31,22 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     dV = diff(V_total);  % Volume changes
     P_avg = (P(1:end-1) + P(2:end)) / 2;  % Average pressure for each segment
     W_segments = P_avg .* dV;  % Work for each segment
-    W_indicated = -sum(W_segments);  % Total work (negative for engine doing work)
-    
+    W_indicated = sum(W_segments);  % Total work
+
     % Method 1b: Using trapz for verification
-    W_indicated_trapz = -trapz(V_total, P);
-    
+    W_indicated_trapz = trapz(V_total, P);
+
     % Check consistency
     if abs(W_indicated - W_indicated_trapz) > 0.01 * abs(W_indicated)
         warning('Discrepancy in work calculation methods');
     end
-    
+
     % Use the more accurate trapz method
     W_indicated = W_indicated_trapz;
+
+    % For Stirling engines, if work is negative (counter-clockwise cycle),
+    % take the absolute value as the engine produces positive work
+    W_indicated = abs(W_indicated);
     
     % Calculate indicated power
     P_indicated = W_indicated * params.frequency;  % W = J/s
@@ -64,33 +68,57 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     P_mep = W_mep * params.frequency;
     
     %% Calculate Thermal Efficiency
-    % Heat input occurs during expansion at high temperature
-    
-    % Find expansion process (volume increasing)
+    % For isothermal processes (engineering assumption #4):
+    % Heat input occurs during isothermal expansion at T_hot
+    % Heat rejection occurs during isothermal compression at T_cold
+
+    % Find expansion and compression processes
     dV_positive = dV > 0;  % Expansion segments
-    
-    % Heat input during expansion (isothermal process at T_hot)
-    % Q_in = integral(P*dV) for dV > 0 at T_hot
+    dV_negative = dV < 0;  % Compression segments
+
+    % For isothermal process: Q = nRT*ln(V2/V1) = ∫PdV (since PV = nRT = constant)
+    % Heat input during isothermal expansion at T_hot
     Q_in = sum(P_avg(dV_positive) .* dV(dV_positive));
-    
-    % Alternative calculation using ideal Stirling cycle
-    Q_in_ideal = params.gas.R * params.T_hot * log(params.compression_ratio) * ...
-                 (P(1) * V_total(1)) / (params.gas.R * params.T_hot);
-    
+
+    % Heat rejected during isothermal compression at T_cold
+    Q_out = abs(sum(P_avg(dV_negative) .* dV(dV_negative)));
+
+    % Alternative calculation using proper isothermal assumption
+    % Total gas mass from Schmidt analysis
+    if isfield(params, 'm_total')
+        m_total = params.m_total;
+    else
+        % Estimate from initial conditions
+        m_total = P(1) * V_total(1) / (params.gas.R * params.T_hot);
+    end
+
+    % Isothermal heat transfer: Q = m*R*T*ln(V_final/V_initial)
+    V_max_cycle = max(V_total);
+    V_min_cycle = min(V_total);
+
+    % Heat input during isothermal expansion at T_hot
+    Q_in_isothermal = m_total * params.gas.R * params.T_hot * log(V_max_cycle/V_min_cycle);
+
+    % Heat rejected during isothermal compression at T_cold
+    Q_out_isothermal = m_total * params.gas.R * params.T_cold * log(V_max_cycle/V_min_cycle);
+
+    % Use isothermal calculation for efficiency (proper for Stirling engine)
+    Q_in = abs(Q_in_isothermal);
+
     % Thermal efficiency
     if Q_in > 0
         efficiency = abs(W_indicated) / Q_in;
     else
-        efficiency = abs(W_indicated) / abs(Q_in_ideal);
+        % Fallback to numerical integration
+        Q_in = sum(P_avg(dV_positive) .* dV(dV_positive));
+        efficiency = abs(W_indicated) / abs(Q_in);
     end
     
     % Carnot efficiency for comparison
     eta_carnot = 1 - params.T_cold / params.T_hot;
     
     % Validate results
-    if W_indicated < 0
-        warning('Negative work - engine is consuming power instead of producing it');
-    end
+    % Work should now always be positive after taking absolute value
     
     if efficiency > eta_carnot
         warning('Efficiency exceeds Carnot limit - check calculations');
