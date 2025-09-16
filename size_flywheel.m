@@ -13,11 +13,11 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
     %   energy_fluctuation - maximum energy fluctuation (J)
     
     % Extract parameters
-    omega_avg = params.omega_avg;              % Average angular velocity (rad/s)
-    Cs = params.flywheel.coeff_fluctuation;    % Coefficient of speed fluctuation
-    w = params.flywheel.width;                 % Flywheel width (m)
-    t = params.flywheel.thickness;             % Rim thickness (m)
-    rho = params.flywheel.material_density;    % Material density (kg/m^3)
+    omega_avg = params.averageAngularVelocity;              % Average angular velocity (rad/s)
+    Cs = params.flywheelCoefficientOfFluctuation;    % Coefficient of speed fluctuation
+    w = params.flywheelWidth;                 % Flywheel width (m)
+    t = params.flywheelRimThickness;             % Rim thickness (m)
+    rho = params.flywheelMaterialDensity;    % Material density (kg/m^3)
     
     % Calculate mean torque
     T_mean = mean(T_total);
@@ -131,9 +131,9 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
     fprintf('\n');
     
     % Validate design
-    if D_outer > params.limits.max_flywheel_diameter
+    if D_outer > params.maximumFlywheelDiameter
         warning('Flywheel diameter (%.2f m) exceeds maximum limit (%.2f m)', ...
-                D_outer, params.limits.max_flywheel_diameter);
+                D_outer, params.maximumFlywheelDiameter);
     end
     
     if D_outer < 0.1

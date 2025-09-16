@@ -1,5 +1,5 @@
 STIRLING ENGINE ANALYSIS SUMMARY
-Generated: 16-Sep-2025 10:18:31
+Generated: 16-Sep-2025 10:34:12
 
 CONFIGURATION:
   Engine Type: Beta-type Stirling

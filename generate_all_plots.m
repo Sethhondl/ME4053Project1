@@ -27,7 +27,7 @@ function generate_all_plots(results, params)
 
     % Use the same total mass as the actual engine for fair comparison
     m_total_ideal = results.m_total;  % Use actual engine's mass
-    R = params.gas.R;
+    R = params.gasConstant;
 
     % Calculate ideal cycle pressures to match actual cycle's operating range
     % State 1: Beginning of compression (V_max, T_cold)
@@ -36,7 +36,7 @@ function generate_all_plots(results, params)
 
     % For ideal Stirling cycle with perfect heat transfer:
     % At state 1: All gas at T_cold, volume V_max
-    P1 = m_total_ideal * R * params.T_cold / V_max;
+    P1 = m_total_ideal * R * params.coldTemperature / V_max;
 
     % State 2: End of compression (V_min, T_cold)
     % Isothermal compression at T_cold: P1*V_max = P2*V_min
@@ -44,7 +44,7 @@ function generate_all_plots(results, params)
 
     % State 3: After isochoric heating (V_min, T_hot)
     % Isochoric process: P2/T_cold = P3/T_hot
-    P3 = P2 * (params.T_hot / params.T_cold);
+    P3 = P2 * (params.hotTemperature / params.coldTemperature);
 
     % State 4: After isothermal expansion (V_max, T_hot)
     % Isothermal expansion at T_hot: P3*V_min = P4*V_max
@@ -120,7 +120,7 @@ function generate_all_plots(results, params)
     % Calculate ideal Stirling cycle work
     % W = m*R*(T_hot - T_cold)*ln(V_max/V_min)
     if isfield(results, 'm_total')
-        work_ideal = results.m_total * params.gas.R * (params.T_hot - params.T_cold) * log(V_max/V_min);
+        work_ideal = results.m_total * params.gasConstant * (params.hotTemperature - params.coldTemperature) * log(V_max/V_min);
     else
         work_ideal = work_actual * 1.5;  % Estimate
     end
@@ -225,7 +225,7 @@ function generate_all_plots(results, params)
          'r*', 'MarkerSize', 15, 'LineWidth', 2);
     
     % Mark current setting
-    current_phase = params.phase_shift * 180/pi;
+    current_phase = params.phaseShift * 180/pi;
     plot(current_phase, interp1(results.optimization.energy_curve(:,1), ...
          results.optimization.energy_curve(:,2), current_phase), ...
          'gs', 'MarkerSize', 10, 'MarkerFaceColor', 'g', 'LineWidth', 2);

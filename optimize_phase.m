@@ -22,10 +22,10 @@ function [optimal_phase, energy_curve, power_curve, efficiency_curve] = optimize
     efficiency_curve = zeros(n_phases, 1);
     
     % Save original phase angle
-    original_phase = params.phase_shift;
-    
+    original_phase = params.phaseShift;
+
     % Simulation parameters
-    theta = linspace(0, 2*pi, params.sim.n_points);
+    theta = linspace(0, 2*pi, params.simulationPointsPerCycle);
     
     fprintf('Phase Angle Optimization:\n');
     fprintf('Testing phase angles from %d to %d degrees...\n', ...
@@ -34,7 +34,7 @@ function [optimal_phase, energy_curve, power_curve, efficiency_curve] = optimize
     % Test each phase angle
     for i = 1:n_phases
         % Update phase angle
-        params.phase_shift = phase_range(i) * pi/180;  % Convert to radians
+        params.phaseShift = phase_range(i) * pi/180;  % Convert to radians
         
         % Calculate volumes
         [V_total, V_exp, V_comp, ~, ~] = calc_volumes(theta, params);
@@ -69,7 +69,7 @@ function [optimal_phase, energy_curve, power_curve, efficiency_curve] = optimize
     phase_max_eff = phase_range(eff_idx);
     
     % Restore original phase angle
-    params.phase_shift = original_phase;
+    params.phaseShift = original_phase;
     
     % Display optimization results
     fprintf('\nOptimization Results:\n');

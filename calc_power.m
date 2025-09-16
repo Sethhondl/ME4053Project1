@@ -49,7 +49,7 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     W_indicated = abs(W_indicated);
     
     % Calculate indicated power
-    P_indicated = W_indicated * params.frequency;  % W = J/s
+    P_indicated = W_indicated * params.operatingFrequency;  % W = J/s
     
     %% Method 2: Mean Effective Pressure (MEP)
     % MEP represents the constant pressure that would produce the same work
@@ -65,7 +65,7 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     W_mep = MEP * V_swept;
     
     % Power from MEP
-    P_mep = W_mep * params.frequency;
+    P_mep = W_mep * params.operatingFrequency;
     
     %% Calculate Thermal Efficiency
     % For isothermal processes (engineering assumption #4):
@@ -89,7 +89,7 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
         m_total = params.m_total;
     else
         % Estimate from initial conditions
-        m_total = P(1) * V_total(1) / (params.gas.R * params.T_hot);
+        m_total = P(1) * V_total(1) / (params.gasConstant * params.hotTemperature);
     end
 
     % Isothermal heat transfer: Q = m*R*T*ln(V_final/V_initial)
@@ -97,10 +97,10 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     V_min_cycle = min(V_total);
 
     % Heat input during isothermal expansion at T_hot
-    Q_in_isothermal = m_total * params.gas.R * params.T_hot * log(V_max_cycle/V_min_cycle);
+    Q_in_isothermal = m_total * params.gasConstant * params.hotTemperature * log(V_max_cycle/V_min_cycle);
 
     % Heat rejected during isothermal compression at T_cold
-    Q_out_isothermal = m_total * params.gas.R * params.T_cold * log(V_max_cycle/V_min_cycle);
+    Q_out_isothermal = m_total * params.gasConstant * params.coldTemperature * log(V_max_cycle/V_min_cycle);
 
     % Use isothermal calculation for efficiency (proper for Stirling engine)
     Q_in = abs(Q_in_isothermal);
@@ -115,7 +115,7 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     end
     
     % Carnot efficiency for comparison
-    eta_carnot = 1 - params.T_cold / params.T_hot;
+    eta_carnot = 1 - params.coldTemperature / params.hotTemperature;
     
     % Validate results
     % Work should now always be positive after taking absolute value

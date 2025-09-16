@@ -14,15 +14,15 @@ function [P, m_total, P_mean] = schmidt_analysis(theta, V_total, V_exp, V_comp, 
     %   P_mean - mean cycle pressure (Pa)
     
     % Extract temperatures
-    T_h = params.T_hot;         % Hot space temperature
-    T_c = params.T_cold;        % Cold space temperature
-    T_r = params.T_regenerator; % Regenerator temperature
-    
+    T_h = params.hotTemperature;         % Hot space temperature
+    T_c = params.coldTemperature;        % Cold space temperature
+    T_r = params.regeneratorTemperature; % Regenerator temperature
+
     % Extract volumes
-    V_reg = params.V_regenerator;  % Regenerator volume (constant)
-    
+    V_reg = params.regeneratorVolume;  % Regenerator volume (constant)
+
     % Gas constant
-    R = params.gas.R;  % Specific gas constant for working fluid
+    R = params.gasConstant;  % Specific gas constant for working fluid
     
     % Schmidt analysis assumes isothermal spaces and ideal regenerator
     % The pressure is uniform throughout the engine at any instant
@@ -40,7 +40,7 @@ function [P, m_total, P_mean] = schmidt_analysis(theta, V_total, V_exp, V_comp, 
     V_total_bdc = V_total(bdc_idx);
     V_exp_bdc = V_exp(bdc_idx);
     V_comp_bdc = V_comp(bdc_idx);
-    P_bdc = params.P_bdc;
+    P_bdc = params.pressureAtBDC;
     
     % Calculate total mass from BDC conditions
     denominator_bdc = V_comp_bdc/T_c + V_reg/T_r + V_exp_bdc/T_h;

@@ -14,7 +14,7 @@ function [omega, alpha, rpm, Cs_actual] = simulate_dynamics(T_total, theta, I_fl
     %   Cs_actual - actual coefficient of speed fluctuation achieved
     
     % Extract parameters
-    omega_avg = params.omega_avg;  % Average angular velocity (rad/s)
+    omega_avg = params.averageAngularVelocity;  % Average angular velocity (rad/s)
     T_mean = mean(T_total);        % Mean torque
     
     % Assume constant load torque equal to mean engine torque (steady state)
@@ -94,15 +94,15 @@ function [omega, alpha, rpm, Cs_actual] = simulate_dynamics(T_total, theta, I_fl
     fprintf('  Speed Range: %.1f - %.1f RPM\n', rpm_min, rpm_max);
     fprintf('  Average Speed: %.1f RPM\n', rpm_mean);
     fprintf('  Speed Variation: %.1f RPM\n', speed_variation);
-    fprintf('  Target Coefficient of Fluctuation: %.4f\n', params.flywheel.coeff_fluctuation);
+    fprintf('  Target Coefficient of Fluctuation: %.4f\n', params.flywheelCoefficientOfFluctuation);
     fprintf('  Actual Coefficient of Fluctuation: %.4f\n', Cs_actual);
     
     % Check if design meets requirements
-    if Cs_actual > params.flywheel.coeff_fluctuation * 1.1
+    if Cs_actual > params.flywheelCoefficientOfFluctuation * 1.1
         warning('Actual coefficient of fluctuation (%.4f) exceeds target (%.4f) by >10%%', ...
-                Cs_actual, params.flywheel.coeff_fluctuation);
+                Cs_actual, params.flywheelCoefficientOfFluctuation);
         fprintf('  Consider increasing flywheel inertia\n');
-    elseif Cs_actual < params.flywheel.coeff_fluctuation * 0.5
+    elseif Cs_actual < params.flywheelCoefficientOfFluctuation * 0.5
         fprintf('  Note: Flywheel may be oversized (Cs actual << Cs target)\n');
     else
         fprintf('  Design meets speed fluctuation requirements\n');

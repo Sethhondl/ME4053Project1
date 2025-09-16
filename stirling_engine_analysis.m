@@ -26,10 +26,10 @@ params = engine_parameters();
 %% 2. DEFINE SIMULATION PARAMETERS
 fprintf('\nStep 2: Setting Up Simulation...\n');
 fprintf('----------------------------------------\n');
-theta = linspace(0, 2*pi, params.sim.n_points);  % Crank angle array (radians)
+theta = linspace(0, 2*pi, params.simulationPointsPerCycle);  % Crank angle array (radians)
 theta = theta(:);  % Ensure column vector
-fprintf('  Simulation Points: %d per cycle\n', params.sim.n_points);
-fprintf('  Angular Resolution: %.2f degrees\n', 360/params.sim.n_points);
+fprintf('  Simulation Points: %d per cycle\n', params.simulationPointsPerCycle);
+fprintf('  Angular Resolution: %.2f degrees\n', 360/params.simulationPointsPerCycle);
 
 %% 3. VOLUME ANALYSIS
 fprintf('\nStep 3: Calculating Volumes...\n');

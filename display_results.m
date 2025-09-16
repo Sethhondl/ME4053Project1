@@ -6,7 +6,7 @@ function display_results(results, params)
     %   params - engine parameters structure
     
     % Calculate Carnot efficiency for comparison
-    eta_carnot = 1 - params.T_cold / params.T_hot;
+    eta_carnot = 1 - params.coldTemperature / params.hotTemperature;
     
     % Display header
     fprintf('\n');
@@ -19,18 +19,18 @@ function display_results(results, params)
     fprintf('ENGINE CONFIGURATION:\n');
     fprintf('---------------------\n');
     fprintf('  Type: Beta-type Stirling Engine\n');
-    fprintf('  Working Fluid: %s\n', params.gas.name);
-    fprintf('  Operating Speed: %.0f RPM\n', params.rpm_avg);
-    fprintf('  Phase Shift: %.0f degrees\n', params.phase_shift * 180/pi);
-    fprintf('  Compression Ratio: %.2f\n', params.compression_ratio);
+    fprintf('  Working Fluid: %s\n', params.gasName);
+    fprintf('  Operating Speed: %.0f RPM\n', params.averageRPM);
+    fprintf('  Phase Shift: %.0f degrees\n', params.phaseShift * 180/pi);
+    fprintf('  Compression Ratio: %.2f\n', params.compressionRatio);
     fprintf('\n');
     
     %% Thermodynamic Performance
     fprintf('THERMODYNAMIC PERFORMANCE:\n');
     fprintf('--------------------------\n');
     fprintf('  Operating Temperatures:\n');
-    fprintf('    Hot Space: %.0f K (%.0f°C)\n', params.T_hot, params.T_hot - 273.15);
-    fprintf('    Cold Space: %.0f K (%.0f°C)\n', params.T_cold, params.T_cold - 273.15);
+    fprintf('    Hot Space: %.0f K (%.0f°C)\n', params.hotTemperature, params.hotTemperature - 273.15);
+    fprintf('    Cold Space: %.0f K (%.0f°C)\n', params.coldTemperature, params.coldTemperature - 273.15);
     fprintf('  Pressure Range: %.2f - %.2f MPa\n', ...
             min(results.P)/1e6, max(results.P)/1e6);
     fprintf('\n');
@@ -38,7 +38,7 @@ function display_results(results, params)
     %% Flywheel Design Results
     fprintf('FLYWHEEL DESIGN:\n');
     fprintf('----------------\n');
-    fprintf('  Material: Steel (ρ = %.0f kg/m³)\n', params.flywheel.material_density);
+    fprintf('  Material: Steel (ρ = %.0f kg/m³)\n', params.flywheelMaterialDensity);
     fprintf('  Outer Diameter: %.3f m (%.1f mm)\n', ...
             results.flywheel.D_outer, results.flywheel.D_outer * 1000);
     fprintf('  Mass: %.2f kg\n', results.flywheel.mass);
@@ -81,9 +81,9 @@ function display_results(results, params)
     fprintf('  Speed Variation: %.1f RPM\n', ...
             max(results.rpm) - min(results.rpm));
     fprintf('  Coefficient of Fluctuation:\n');
-    fprintf('    Target: %.4f\n', params.flywheel.coeff_fluctuation);
+    fprintf('    Target: %.4f\n', params.flywheelCoefficientOfFluctuation);
     fprintf('    Achieved: %.4f\n', results.Cs_actual);
-    if results.Cs_actual <= params.flywheel.coeff_fluctuation * 1.1
+    if results.Cs_actual <= params.flywheelCoefficientOfFluctuation * 1.1
         fprintf('    Status: ✓ MEETS REQUIREMENT\n');
     else
         fprintf('    Status: ✗ EXCEEDS LIMIT\n');
@@ -95,10 +95,10 @@ function display_results(results, params)
     fprintf('--------------------------\n');
     fprintf('  Optimal Phase (Max Power): %.0f degrees\n', results.optimal_phase);
     fprintf('  Current Phase Setting: %.0f degrees\n', ...
-            params.phase_shift * 180/pi);
+            params.phaseShift * 180/pi);
     
     % Find power at optimal vs current
-    current_phase = params.phase_shift * 180/pi;
+    current_phase = params.phaseShift * 180/pi;
     opt_power = max(results.optimization.power_curve(:,2));
     
     % Interpolate current power from optimization curve
@@ -143,22 +143,22 @@ function display_results(results, params)
     end
     
     % Flywheel size check
-    if results.flywheel.D_outer <= params.limits.max_flywheel_diameter
+    if results.flywheel.D_outer <= params.maximumFlywheelDiameter
         fprintf('  ✓ Flywheel Diameter: %.2f m (< %.1f m limit)\n', ...
-                results.flywheel.D_outer, params.limits.max_flywheel_diameter);
+                results.flywheel.D_outer, params.maximumFlywheelDiameter);
     else
         fprintf('  ✗ Flywheel Diameter: %.2f m (EXCEEDS %.1f m limit)\n', ...
-                results.flywheel.D_outer, params.limits.max_flywheel_diameter);
+                results.flywheel.D_outer, params.maximumFlywheelDiameter);
         requirements_met = false;
     end
     
     % Speed fluctuation check
-    if results.Cs_actual <= params.flywheel.coeff_fluctuation * 1.1
+    if results.Cs_actual <= params.flywheelCoefficientOfFluctuation * 1.1
         fprintf('  ✓ Speed Fluctuation: Cs = %.4f (< %.4f target)\n', ...
-                results.Cs_actual, params.flywheel.coeff_fluctuation);
+                results.Cs_actual, params.flywheelCoefficientOfFluctuation);
     else
         fprintf('  ✗ Speed Fluctuation: Cs = %.4f (EXCEEDS %.4f target)\n', ...
-                results.Cs_actual, params.flywheel.coeff_fluctuation);
+                results.Cs_actual, params.flywheelCoefficientOfFluctuation);
         requirements_met = false;
     end
     
@@ -215,9 +215,9 @@ function save_results_to_file(results, params)
     
     fprintf(fid, 'CONFIGURATION:\n');
     fprintf(fid, '  Engine Type: Beta-type Stirling\n');
-    fprintf(fid, '  Working Fluid: %s\n', params.gas.name);
-    fprintf(fid, '  Phase Shift: %.0f degrees\n', params.phase_shift * 180/pi);
-    fprintf(fid, '  Compression Ratio: %.2f\n\n', params.compression_ratio);
+    fprintf(fid, '  Working Fluid: %s\n', params.gasName);
+    fprintf(fid, '  Phase Shift: %.0f degrees\n', params.phaseShift * 180/pi);
+    fprintf(fid, '  Compression Ratio: %.2f\n\n', params.compressionRatio);
     
     fprintf(fid, 'FLYWHEEL DESIGN:\n');
     fprintf(fid, '  Outer Diameter: %.3f m\n', results.flywheel.D_outer);

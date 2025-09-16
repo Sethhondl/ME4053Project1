@@ -15,13 +15,13 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
     %   T_mean - mean torque over cycle (N*m)
     
     % Extract parameters
-    r_p = params.power.crank_length;      % Power piston crank radius
-    l_p = params.power.rod_length;        % Power piston connecting rod
-    r_d = params.disp.crank_length;       % Displacer crank radius
-    l_d = params.disp.rod_length;         % Displacer connecting rod
-    phase = params.phase_shift;           % Phase angle
-    A = params.cylinder.area;             % Piston area
-    P_atm = params.P_atm;                 % Atmospheric pressure
+    r_p = params.powerCrankLength;      % Power piston crank radius
+    l_p = params.powerRodLength;        % Power piston connecting rod
+    r_d = params.displacerCrankLength;       % Displacer crank radius
+    l_d = params.displacerRodLength;         % Displacer connecting rod
+    phase = params.phaseShift;           % Phase angle
+    A = params.cylinderArea;             % Piston area
+    P_atm = params.atmosphericPressure;                 % Atmospheric pressure
     
     % Initialize torque arrays
     T_power = zeros(size(theta));
@@ -63,7 +63,7 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
         % Displacer rod diameter is much smaller than bore
 
         % Use actual displacer rod diameter from parameters
-        d_rod = params.disp.rod_diameter;  % Get from parameters
+        d_rod = params.displacerRodDiameter;  % Get from parameters
         A_rod = pi * (d_rod/2)^2;  % Rod cross-sectional area
 
         % Force on displacer = pressure difference * rod area
@@ -111,7 +111,7 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
         fprintf('  Torque Fluctuation: %.2f\n', torque_fluctuation);
         
         % Check if torque is reasonable
-        expected_torque = params.limits.max_power / params.omega_avg;
+        expected_torque = params.maximumPower / params.averageAngularVelocity;
         if abs(T_mean) > 2 * expected_torque
             warning('Mean torque seems high compared to expected power output');
         end
