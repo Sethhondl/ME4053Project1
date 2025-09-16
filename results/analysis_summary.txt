@@ -1,5 +1,5 @@
 STIRLING ENGINE ANALYSIS SUMMARY
-Generated: 16-Sep-2025 08:57:19
+Generated: 16-Sep-2025 10:18:31
 
 CONFIGURATION:
   Engine Type: Beta-type Stirling
@@ -9,10 +9,10 @@ CONFIGURATION:
 
 FLYWHEEL DESIGN:
   Outer Diameter: 0.602 m
-  Mass: 55.41 kg
-  Moment of Inertia: 4.3922 kg·m²
+  Mass: 55.47 kg
+  Moment of Inertia: 4.4067 kg·m²
 
 PERFORMANCE:
-  Power Output: 1.85 kW
-  Thermal Efficiency: 26.6%
-  Speed Fluctuation (Cs): 0.0381
+  Power Output: 2.13 kW
+  Thermal Efficiency: 30.6%
+  Speed Fluctuation (Cs): 0.0382

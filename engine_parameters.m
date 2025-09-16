@@ -13,6 +13,7 @@ function params = engine_parameters()
     params.disp.crank_length = 0.075;         % m (75 mm) - 1.25x power stroke
     params.disp.rod_length = 0.300;           % m (300 mm)
     params.disp.volume = 0.002;               % m^3 (2000 cm^3)
+    params.disp.rod_diameter = 0.009;         % m (9 mm) - 5% of bore diameter for Beta-type
 
     %% Cylinder Parameters
     params.cylinder.bore = 0.180;             % m (180 mm diameter) - sized for 1-10kW power

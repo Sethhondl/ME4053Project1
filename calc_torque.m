@@ -60,10 +60,10 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
 
         % For beta-type engine, the displacer experiences a pressure differential
         % The pressure acts on the displacer rod area (not full area)
-        % Displacer rod diameter is typically much smaller than bore
+        % Displacer rod diameter is much smaller than bore
 
-        % Estimate displacer rod diameter as ~5% of bore diameter (typical)
-        d_rod = params.cylinder.bore * 0.05;  % Small rod for Beta-type
+        % Use actual displacer rod diameter from parameters
+        d_rod = params.disp.rod_diameter;  % Get from parameters
         A_rod = pi * (d_rod/2)^2;  % Rod cross-sectional area
 
         % Force on displacer = pressure difference * rod area

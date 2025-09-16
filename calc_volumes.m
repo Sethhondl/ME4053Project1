@@ -69,22 +69,35 @@ function [V_total, V_exp, V_comp, x_power, x_disp] = calc_volumes(theta, params)
     V_working = V_total - params.V_dead_total;
 
     % The displacer position determines the split of working volume
-    % Use sinusoidal variation for smooth transition
-    % When theta_disp = 0, more gas in expansion space
-    % When theta_disp = pi, more gas in compression space
+    % Based on actual displacer position from crank-slider kinematics
+    % When displacer moves up (x_disp decreases), gas moves to hot space
+    % When displacer moves down (x_disp increases), gas moves to cold space
 
-    % Phase-shifted angle for displacer
-    theta_disp = theta - phase;
+    % Normalize displacer position (0 at TDC, max at BDC)
+    x_disp_max = 2 * r_d;  % Maximum stroke of displacer
 
-    % Split factor based on displacer position (0 to 1)
-    % Using cosine for smooth variation
-    split_factor = 0.5 * (1 + cos(theta_disp));
+    % Calculate fraction of gas in compression space based on displacer position
+    % When x_disp = 0 (TDC), most gas is in expansion space
+    % When x_disp = x_disp_max (BDC), most gas is in compression space
+    disp_fraction = x_disp / x_disp_max;  % 0 to 1 normalized position
+
+    % For Beta-type engine, displacer shuttles gas between hot and cold spaces
+    % The displacer position affects the distribution, not the total volume
+    % Use a smooth transition based on displacer position
+
+    % Split the working volume between hot and cold spaces
+    % When disp_fraction = 0 (TDC), more gas in expansion (hot) space
+    % When disp_fraction = 1 (BDC), more gas in compression (cold) space
+
+    % Use smooth sinusoidal transition for realistic gas distribution
+    % This accounts for the gradual gas transfer as displacer moves
+    split_factor = 0.5 * (1 - cos(pi * disp_fraction));
 
     % Compression space (cold) volume
-    V_comp = params.V_dead_cold + V_working .* (1 - split_factor);
+    V_comp = params.V_dead_cold + V_working .* split_factor;
 
     % Expansion space (hot) volume
-    V_exp = params.V_dead_hot + V_working .* split_factor;
+    V_exp = params.V_dead_hot + V_working .* (1 - split_factor);
 
     % Regenerator volume stays constant
     % Note: V_total = V_comp + V_exp + V_reg should be satisfied

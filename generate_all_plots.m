@@ -19,45 +19,41 @@ function generate_all_plots(results, params)
     P_min = min(results.P);
     P_max = max(results.P);
     
-    % Ideal Stirling cycle - properly calculated
+    % Ideal Stirling cycle - properly calculated with mass conservation
     % Process 1-2: Isothermal compression at T_cold
     % Process 2-3: Isochoric (constant volume) heating
     % Process 3-4: Isothermal expansion at T_hot
     % Process 4-1: Isochoric (constant volume) cooling
 
-    % Use actual engine's minimum pressure as reference
-    % This ensures the ideal cycle is in the same pressure range
-    P_min_actual = min(results.P);
-    P_max_actual = max(results.P);
+    % Use the same total mass as the actual engine for fair comparison
+    m_total_ideal = results.m_total;  % Use actual engine's mass
+    R = params.gas.R;
 
-    % Calculate ideal cycle pressures using proper thermodynamics
-    % State 1: Beginning of compression (V_max, T_cold, P1)
-    % Choose P1 to be similar to minimum pressure of actual cycle
-    P1 = P_min_actual * 1.2;  % Slightly above minimum
+    % Calculate ideal cycle pressures to match actual cycle's operating range
+    % State 1: Beginning of compression (V_max, T_cold)
+    % Use ideal gas law: P1 = m*R*T_cold/V_max
+    % But we need to determine the mass distribution
 
-    % State 2: End of compression (V_min, T_cold, P2)
-    % For isothermal process at T_cold: P1*V_max = P2*V_min
+    % For ideal Stirling cycle with perfect heat transfer:
+    % At state 1: All gas at T_cold, volume V_max
+    P1 = m_total_ideal * R * params.T_cold / V_max;
+
+    % State 2: End of compression (V_min, T_cold)
+    % Isothermal compression at T_cold: P1*V_max = P2*V_min
     P2 = P1 * (V_max / V_min);
 
-    % State 3: After heating (V_min, T_hot, P3)
-    % For isochoric process: P2/T_cold = P3/T_hot
+    % State 3: After isochoric heating (V_min, T_hot)
+    % Isochoric process: P2/T_cold = P3/T_hot
     P3 = P2 * (params.T_hot / params.T_cold);
 
-    % State 4: After expansion (V_max, T_hot, P4)
-    % For isothermal process at T_hot: P3*V_min = P4*V_max
+    % State 4: After isothermal expansion (V_max, T_hot)
+    % Isothermal expansion at T_hot: P3*V_min = P4*V_max
     P4 = P3 * (V_min / V_max);
 
-    % Verify P4/T_hot = P1/T_cold (should close the cycle)
-    % This is automatically satisfied by our calculations
-
-    % Isothermal compression: P1*V_max = P2*V_min
-    P2 = P1 * (V_max / V_min);
-
-    % Isochoric heating: P2/T_cold = P3/T_hot
-    P3 = P2 * (params.T_hot / params.T_cold);
-
-    % Isothermal expansion: P3*V_min = P4*V_max
-    P4 = P3 * (V_min / V_max);
+    % Verify closure: P4/T_hot should equal P1/T_cold
+    % P4 = P3*(V_min/V_max) = P2*(T_hot/T_cold)*(V_min/V_max)
+    %    = P1*(V_max/V_min)*(T_hot/T_cold)*(V_min/V_max) = P1*(T_hot/T_cold)
+    % So P4/T_hot = P1/T_cold ✓
 
     % Create arrays for plotting with more points for isothermal processes
     n_iso = 50;  % Points for isothermal curves
