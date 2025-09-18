@@ -6,36 +6,55 @@ function params = engine_parameters()
     % Flywheel Material: Steel
 
     %% Power Piston Parameters
-    params.powerCrankLength = 0.060;        % m (60 mm) - optimized for 1-10kW
-    params.powerRodLength = 0.240;          % m (240 mm)
+    params.powerCrankLength = 0.025;        % m (25 mm) - from given parameters
+    params.powerRodLength = 0.075;          % m (75 mm) - from given parameters
+    params.powerPinToPistonTop = 0.005;     % m (5 mm) - distance from pin to piston top
 
     %% Displacer Parameters
-    params.displacerCrankLength = 0.075;         % m (75 mm) - 1.25x power stroke
-    params.displacerRodLength = 0.300;           % m (300 mm)
-    params.displacerVolume = 0.002;              % m^3 (2000 cm^3)
+    params.displacerCrankLength = 0.020;         % m (20 mm) - from given parameters
+    params.displacerRodLength = 0.140;           % m (140 mm) - from given parameters
+    params.displacerVolume = 4e-5;               % m^3 (40 cm^3) - from given parameters
     params.displacerRodDiameter = 0.009;         % m (9 mm) - 5% of bore diameter for Beta-type
 
     %% Cylinder Parameters
-    params.cylinderBore = 0.180;             % m (180 mm diameter) - sized for 1-10kW power
+    params.cylinderBore = 0.050;             % m (50 mm diameter) - from given parameters
     params.cylinderArea = pi * (params.cylinderBore/2)^2;  % m^2
 
+    %% Calculate Swept Volumes (needed for dead volume calculation)
+    params.powerSweptVolume = params.cylinderArea * 2 * params.powerCrankLength;  % m^3
+    params.displacerSweptVolume = params.cylinderArea * 2 * params.displacerCrankLength;  % m^3
+
     %% Operating Parameters
-    params.phaseShift = 90 * pi/180;         % radians (90 degrees)
-    params.compressionRatio = 3.5;           % dimensionless
+    params.phaseShift = pi/2;                % radians (90 degrees) - from given parameters
+    params.compressionRatio = 1.7;           % dimensionless - from given parameters
 
     %% Temperature Conditions
-    params.hotTemperature = 600;                       % K (hot temperature) - reduced for smaller engine
-    params.coldTemperature = 350;                      % K (cold temperature)
+    params.hotTemperature = 900;                       % K (hot temperature) - from given parameters
+    params.coldTemperature = 300;                      % K (cold temperature) - from given parameters
     params.regeneratorTemperature = (params.hotTemperature + params.coldTemperature) / 2;  % K (average)
 
     %% Pressure Conditions
-    params.pressureAtBDC = 1.5e6;                     % Pa (1.5 MPa at bottom dead center) - for target power
-    params.atmosphericPressure = 101325;              % Pa (atmospheric pressure)
+    params.pressureAtBDC = 500e3;                     % Pa (500 kPa at bottom dead center) - from given parameters
+    params.atmosphericPressure = 101.3e3;             % Pa (101.3 kPa) - from given parameters
 
-    %% Dead Volumes
-    params.deadVolumeHot = 0.00005;              % m^3 (50 cm^3 hot space dead volume)
-    params.deadVolumeCold = 0.00005;             % m^3 (50 cm^3 cold space dead volume)
-    params.regeneratorVolume = 0.0001;           % m^3 (100 cm^3 regenerator dead volume)
+    %% Dead Volumes (calculated to achieve compression ratio of 1.7)
+    % Given compression ratio = 1.7
+    % CR = V_max / V_min = (swept + dead) / dead
+    % Therefore: dead = swept / (CR - 1)
+    targetCompressionRatio = 1.7;  % from given parameters
+
+    % Calculate required total dead volume
+    requiredTotalDeadVolume = params.powerSweptVolume / (targetCompressionRatio - 1);
+
+    % Given regenerator volume
+    params.regeneratorVolume = 2e-5;             % m^3 (20 cm^3) - from given parameters
+
+    % Remaining dead volume to distribute between hot and cold spaces
+    remainingDeadVolume = requiredTotalDeadVolume - params.regeneratorVolume;
+
+    % Distribute dead volume (40% hot, 60% cold typical for beta-type)
+    params.deadVolumeHot = 0.4 * remainingDeadVolume;     % m^3 (hot space dead volume)
+    params.deadVolumeCold = 0.6 * remainingDeadVolume;    % m^3 (cold space dead volume)
     params.totalDeadVolume = params.deadVolumeHot + params.deadVolumeCold + params.regeneratorVolume;
 
     %% Working Fluid Properties (Air)
@@ -46,13 +65,13 @@ function params = engine_parameters()
     params.gasName = 'Air';
 
     %% Flywheel Parameters
-    params.flywheelWidth = 0.100;                   % m (100 mm)
-    params.flywheelRimThickness = 0.040;            % m (40 mm rim thickness)
-    params.flywheelMaterialDensity = 7850;          % kg/m^3 (steel)
-    params.flywheelCoefficientOfFluctuation = 0.04; % dimensionless (4%)
+    params.flywheelWidth = 0.025;                   % m (25 mm) - from given parameters
+    params.flywheelRimThickness = 0.050;            % m (50 mm rim thickness) - from given parameters
+    params.flywheelMaterialDensity = 8000;          % kg/m^3 (304 stainless steel) - from given parameters
+    params.flywheelCoefficientOfFluctuation = 0.003; % dimensionless (0.3%) - from given parameters
 
     %% Operating Speed
-    params.averageRPM = 500;                     % RPM (average rotational speed)
+    params.averageRPM = 650;                     % RPM (average rotational speed) - from given parameters
     params.averageAngularVelocity = params.averageRPM * 2*pi/60;  % rad/s
     params.operatingFrequency = params.averageRPM / 60;   % Hz
 
@@ -70,9 +89,7 @@ function params = engine_parameters()
     params.minimumPressure = 0;                           % Pa (must be positive)
 
     %% Calculated Derived Parameters
-    % Swept volumes
-    params.powerSweptVolume = params.cylinderArea * 2 * params.powerCrankLength;  % m^3
-    params.displacerSweptVolume = params.cylinderArea * 2 * params.displacerCrankLength;    % m^3
+    % Swept volumes already calculated above for dead volume calculation
 
     % For beta-type engine, compression ratio is based on power piston swept volume
     % Maximum volume when power piston at BDC

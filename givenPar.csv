@@ -1,0 +1,23 @@
+Group,Item,Value,Unit
+Power Piston,Crank Length,0.025,m
+,Connecting Rod Length,0.075,m
+,Distance from pin to piston top,0.005,m
+Displacer,Crank length,0.02,m
+,Connecting rod length,0.14,m
+,Displacer volume,4.00E-05,m^3
+Culinder bore,Cylinder Bore Diameter,0.05,m
+Phase shift,Phase Shift,pi/2,rad
+Compression Ration,Compresion Ratio,1.7,
+High Temp,High Temp,900,k
+Low Temp,Low Temp,300,k
+Gas Pressure at BDC,Gas Pressure at BDC,500,kPa abs
+Atm Pressure,Atm Pressure,101.3,kPa abs
+Regenerator Dead Volume,Regenerator Dead Volume,2.00E-05,m^3
+Work Fluild,Work fluid,air,
+Fly Wheel,Width,0.025,m
+,Diameter,unknown,m
+,Rim Thickness,0.05,m
+,Material,304 Stainless Steel,
+,Density,8000,kg/m^3
+Coeffieient of fluctuation,Coeffieient of fluctuation,0.003,
+Average Rotational velocity,Average Rotational velocity,650,rpm
