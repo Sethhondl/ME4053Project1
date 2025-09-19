@@ -13,8 +13,8 @@ function [P, m_total, P_mean] = schmidt_analysis(theta, V_total, V_exp, V_comp, 
 
     %% ========== FIND REFERENCE CONDITIONS ==========
 
-    % Locate bottom dead center (BDC) position
-    [~, bdc_idx] = min(abs(theta));
+    % Locate bottom dead center (BDC) position - maximum volume
+    [~, bdc_idx] = max(V_total);
 
     % Get volumes at BDC
     V_exp_bdc = V_exp(bdc_idx);

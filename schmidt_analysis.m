@@ -35,8 +35,8 @@ function [P, m_total, P_mean] = schmidt_analysis(theta, V_total, V_exp, V_comp, 
     % P = (m_total * R) / (V_comp/T_c + V_reg/T_r + V_exp/T_h)
     
     % First, find total mass from initial conditions (at BDC)
-    % Assuming theta=0 is at BDC for power piston
-    [~, bdc_idx] = min(abs(theta));
+    % BDC occurs at maximum volume (theta = pi for standard crank)
+    [~, bdc_idx] = max(V_total);  % Find where volume is maximum (BDC)
     V_total_bdc = V_total(bdc_idx);
     V_exp_bdc = V_exp(bdc_idx);
     V_comp_bdc = V_comp(bdc_idx);
