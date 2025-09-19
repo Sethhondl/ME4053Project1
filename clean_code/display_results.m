@@ -15,9 +15,8 @@ function display_results(results, params)
 
     % Check requirements
     requirements_met = true;
-    if results.P_indicated < 1000 || results.P_indicated > 10000
-        requirements_met = false;
-    end
+    % Power output is informational only - not a requirement
+    % (removed incorrect 1-10 kW range check)
     if results.efficiency > eta_carnot
         requirements_met = false;
     end

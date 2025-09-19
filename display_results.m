@@ -122,15 +122,10 @@ function display_results(results, params)
     % Check all requirements
     requirements_met = true;
     
-    % Power output check
-    if results.P_indicated >= 1000 && results.P_indicated <= 10000
-        fprintf('  ✓ Power Output: %.2f kW (1-10 kW range)\n', ...
-                results.P_indicated/1000);
-    else
-        fprintf('  ✗ Power Output: %.2f kW (OUTSIDE 1-10 kW range)\n', ...
-                results.P_indicated/1000);
-        requirements_met = false;
-    end
+    % Power output (informational only - not a requirement)
+    fprintf('  • Power Output: %.2f kW\n', results.P_indicated/1000);
+    % Note: Power output is determined by the given parameters
+    % No specific power range requirement was specified
     
     % Efficiency check
     if results.efficiency <= eta_carnot
