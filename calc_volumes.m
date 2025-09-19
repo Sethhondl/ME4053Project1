@@ -90,6 +90,8 @@ function [totalVolume, expansionVolume, compressionVolume, powerPistonPosition, 
     volumeSplitFactor = 0.5 * (1 - cos(pi * normalizedDisplacerPosition));
 
     % Compression space (cold) volume
+    % NOTE: Displacer rod diameter is ignored in volume calculations per project specifications
+    % The rod only affects torque calculations, not gas volume distribution
     compressionVolume = params.deadVolumeCold + workingGasVolume .* volumeSplitFactor;
 
     % Expansion space (hot) volume
