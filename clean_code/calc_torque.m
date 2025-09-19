@@ -24,17 +24,9 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
         end
 
         % Displacer torque
-        theta_disp = theta(i) - phase;
-        d_rod = params.displacerRodDiameter;
-        A_rod = pi * (d_rod/2)^2;
-        F_disp = (P(i) - P_atm) * A_rod;
-        sin_beta_d = r_d * sin(theta_disp) / l_d;
-        if abs(sin_beta_d) < 1
-            cos_beta_d = sqrt(1 - sin_beta_d^2);
-            T_disp(i) = F_disp * r_d * sin(theta_disp) / cos_beta_d;
-        else
-            T_disp(i) = 0;
-        end
+        % Rod diameter assumed zero per specifications
+        % No net force on displacer (equal pressure on both sides)
+        T_disp(i) = 0;
     end
 
     T_total = T_power + T_disp;

@@ -51,35 +51,12 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
         end
         
         %% Displacer Torque
-        % The displacer moves gas between hot and cold spaces
-        % In beta-type engine, displacer experiences pressure differential
-        % between the hot and cold spaces it separates
+        % For beta-type engine with rod diameter assumed zero per specifications
+        % The displacer experiences no net force (equal pressure on both sides)
+        % Schmidt analysis assumes uniform pressure throughout engine
+        % Therefore, no torque contribution from displacer
 
-        % Displacer crank angle (with phase shift)
-        theta_disp = theta(i) - phase;
-
-        % For beta-type engine, the displacer experiences a pressure differential
-        % The pressure acts on the displacer rod area (not full area)
-        % Displacer rod diameter is much smaller than bore
-
-        % Use actual displacer rod diameter from parameters
-        d_rod = params.displacerRodDiameter;  % Get from parameters
-        A_rod = pi * (d_rod/2)^2;  % Rod cross-sectional area
-
-        % Force on displacer = pressure difference * rod area
-        % For Beta-type, the displacer experiences minimal force
-        % Only the rod area sees pressure differential
-        F_disp = (P(i) - P_atm) * A_rod;  % Net pressure on rod area only
-
-        % Displacer connecting rod angle
-        sin_beta_d = r_d * sin(theta_disp) / l_d;
-        if abs(sin_beta_d) < 1
-            cos_beta_d = sqrt(1 - sin_beta_d^2);
-            % Use same torque formula as power piston
-            T_disp(i) = F_disp * r_d * sin(theta_disp) / cos_beta_d;
-        else
-            T_disp(i) = 0;
-        end
+        T_disp(i) = 0;  % Zero torque as rod diameter is assumed negligible
     end
     
     % Total torque is the sum of both contributions

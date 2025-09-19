@@ -68,7 +68,7 @@ function params = engine_parameters()
 
     params.flywheelWidth = 0.025;                 % m - Flywheel width
     params.flywheelRimThickness = 0.050;          % m - Rim thickness
-    params.flywheelMaterialDensity = 8000;        % kg/m³ - 304 Stainless Steel
+    params.flywheelMaterialDensity = 7750;        % kg/m³ - 304 Stainless Steel
     params.flywheelCoefficientOfFluctuation = 0.003;  % - Target Cs value
 
 

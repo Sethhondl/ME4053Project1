@@ -1,5 +1,5 @@
 STIRLING ENGINE ANALYSIS SUMMARY
-Generated: 18-Sep-2025 19:27:52
+Generated: 18-Sep-2025 20:14:10
 
 CONFIGURATION:
   Engine Type: Beta-type Stirling
@@ -8,8 +8,8 @@ CONFIGURATION:
   Compression Ratio: 1.70
 
 FLYWHEEL DESIGN:
-  Outer Diameter: 0.687 m
-  Mass: 20.00 kg
+  Outer Diameter: 0.693 m
+  Mass: 19.58 kg
   Moment of Inertia: 2.0379 kg·m²
 
 PERFORMANCE:
