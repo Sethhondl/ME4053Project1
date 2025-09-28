@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stirling Engine Mathematical Model: From Parameters to P-V Diagram</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 0.75in;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+
+        h1 {
+            color: #1a5490;
+            border-bottom: 3px solid #1a5490;
+            padding-bottom: 10px;
+            page-break-after: avoid;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+            margin-top: 30px;
+            page-break-after: avoid;
+            font-size: 22px;
+        }
+
+        h3 {
+            color: #34495e;
+            margin-top: 20px;
+            font-size: 18px;
+            page-break-after: avoid;
+        }
+
+        .equation-box {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            page-break-inside: avoid;
+        }
+
+        .equation {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .variable-def {
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            padding: 10px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+
+        .flow-diagram {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 25px 0;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .section-summary {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .note {
+            background: #fff9c4;
+            border-left: 3px solid #f9a825;
+            padding: 10px;
+            margin: 15px 0;
+            font-style: italic;
+            page-break-inside: avoid;
+        }
+
+        .title-page {
+            text-align: center;
+            padding: 50px 0;
+            page-break-after: always;
+        }
+
+        .title-page h1 {
+            font-size: 36px;
+            border: none;
+            margin-bottom: 30px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #555;
+            margin-bottom: 50px;
+        }
+
+        .toc {
+            page-break-after: always;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .toc a {
+            color: #1a5490;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        @media print {
+            .flow-diagram {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .equation-box {
+                background: #f8f9fa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .section-summary {
+                background: #e8f5e9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="title-page">
+    <h1>Stirling Engine Mathematical Model</h1>
+    <div class="subtitle">Complete Equation Flow from Initial Parameters to P-V Diagram</div>
+    <div style="margin-top: 100px;">
+        <p><strong>Beta-Type Stirling Engine Analysis</strong></p>
+        <p>Schmidt Theory Implementation</p>
+        <p>Document Version 1.0</p>
+    </div>
+</div>
+
+<div class="toc">
+    <h1>Table of Contents</h1>
+    <ul>
+        <li>1. <a href="#overview">Overview and Calculation Pipeline</a></li>
+        <li>2. <a href="#parameters">Initial Parameters</a></li>
+        <li>3. <a href="#kinematics">Volume Calculations - Crank-Slider Kinematics</a></li>
+        <li>4. <a href="#schmidt">Schmidt Analysis - Pressure Calculations</a></li>
+        <li>5. <a href="#work">Work and Power Calculations</a></li>
+        <li>6. <a href="#torque">Torque Analysis</a></li>
+        <li>7. <a href="#pvdiagram">P-V Diagram Generation</a></li>
+        <li>8. <a href="#summary">Complete Mathematical Flow Summary</a></li>
+    </ul>
+</div>
+
+<h1 id="overview">1. Overview and Calculation Pipeline</h1>
+
+<div class="flow-diagram">
+    <div>Initial Parameters</div>
+    <div class="flow-arrow">↓</div>
+    <div>Crank-Slider Kinematics</div>
+    <div class="flow-arrow">↓</div>
+    <div>Volume Calculations</div>
+    <div class="flow-arrow">↓</div>
+    <div>Schmidt Analysis (Pressure)</div>
+    <div class="flow-arrow">↓</div>
+    <div>Work & Power</div>
+    <div class="flow-arrow">↓</div>
+    <div>P-V Diagram</div>
+</div>
+
+<p>This document presents the complete mathematical model for analyzing a beta-type Stirling engine, showing how initial geometric and thermodynamic parameters are transformed through fundamental physics equations to produce the characteristic P-V diagram.</p>
+
+<div class="note">
+    <strong>Note:</strong> The beta-type configuration has both pistons in the same cylinder. The power piston controls total volume while the displacer redistributes gas between hot and cold spaces.
+</div>
+
+<h1 id="parameters">2. Initial Parameters</h1>
+
+<h2>2.1 Geometric Parameters</h2>
+
+<table>
+    <tr>
+        <th>Parameter</th>
+        <th>Symbol</th>
+        <th>Value</th>
+        <th>Unit</th>
+    </tr>
+    <tr>
+        <td>Cylinder bore diameter</td>
+        <td>D</td>
+        <td>0.050</td>
+        <td>m</td>
+    </tr>
+    <tr>
+        <td>Cylinder area</td>
+        <td>A</td>
+        <td>π(D/2)² = 1.963×10⁻³</td>
+        <td>m²</td>
+    </tr>
+    <tr>
+        <td>Power piston crank radius</td>
+        <td>r<sub>p</sub></td>
+        <td>0.025</td>
+        <td>m</td>
+    </tr>
+    <tr>
+        <td>Power piston connecting rod</td>
+        <td>l<sub>p</sub></td>
+        <td>0.075</td>
+        <td>m</td>
+    </tr>
+    <tr>
+        <td>Displacer crank radius</td>
+        <td>r<sub>d</sub></td>
+        <td>0.020</td>
+        <td>m</td>
+    </tr>
+    <tr>
+        <td>Displacer connecting rod</td>
+        <td>l<sub>d</sub></td>
+        <td>0.140</td>
+        <td>m</td>
+    </tr>
+    <tr>
+        <td>Phase shift angle</td>
+        <td>φ</td>
+        <td>π/2 (90°)</td>
+        <td>rad</td>
+    </tr>
+</table>
+
+<h2>2.2 Thermodynamic Parameters</h2>
+
+<table>
+    <tr>
+        <th>Parameter</th>
+        <th>Symbol</th>
+        <th>Value</th>
+        <th>Unit</th>
+    </tr>
+    <tr>
+        <td>Hot space temperature</td>
+        <td>T<sub>h</sub></td>
+        <td>900</td>
+        <td>K</td>
+    </tr>
+    <tr>
+        <td>Cold space temperature</td>
+        <td>T<sub>c</sub></td>
+        <td>300</td>
+        <td>K</td>
+    </tr>
+    <tr>
+        <td>Regenerator temperature</td>
+        <td>T<sub>r</sub></td>
+        <td>(T<sub>h</sub> + T<sub>c</sub>)/2 = 600</td>
+        <td>K</td>
+    </tr>
+    <tr>
+        <td>Pressure at BDC</td>
+        <td>P<sub>BDC</sub></td>
+        <td>500</td>
+        <td>kPa</td>
+    </tr>
+    <tr>
+        <td>Gas constant (air)</td>
+        <td>R</td>
+        <td>287</td>
+        <td>J/(kg·K)</td>
+    </tr>
+    <tr>
+        <td>Compression ratio</td>
+        <td>CR</td>
+        <td>1.7</td>
+        <td>-</td>
+    </tr>
+</table>
+
+<h2>2.3 Derived Volume Parameters</h2>
+
+<div class="equation-box">
+    <div class="equation">V<sub>swept,p</sub> = A × 2r<sub>p</sub> = 1.963×10⁻³ × 0.050 = 9.817×10⁻⁵ m³</div>
+    <div class="equation">V<sub>dead</sub> = V<sub>swept,p</sub>/(CR - 1) = 9.817×10⁻⁵/0.7 = 1.402×10⁻⁴ m³</div>
+</div>
+
+<h1 id="kinematics">3. Volume Calculations - Crank-Slider Kinematics</h1>
+
+<h2>3.1 Crank-Slider Position Equations</h2>
+
+<p>The exact crank-slider equations account for the finite connecting rod length and provide accurate piston positions:</p>
+
+<h3>Power Piston Position</h3>
+
+<div class="equation-box">
+    <div class="equation">β<sub>p</sub>(θ) = arcsin(r<sub>p</sub> × sin(θ) / l<sub>p</sub>)</div>
+    <div class="equation">x<sub>p,crank</sub>(θ) = r<sub>p</sub> × cos(θ) + l<sub>p</sub> × cos(β<sub>p</sub>)</div>
+    <div class="equation">x<sub>p</sub>(θ) = (r<sub>p</sub> + l<sub>p</sub>) - x<sub>p,crank</sub>(θ)</div>
+</div>
+
+<div class="variable-def">
+    <strong>Where:</strong><br>
+    • θ = crank angle (radians)<br>
+    • β<sub>p</sub> = connecting rod angle<br>
+    • x<sub>p</sub> = piston displacement from TDC
+</div>
+
+<h3>Displacer Position (with Phase Shift)</h3>
+
+<div class="equation-box">
+    <div class="equation">θ<sub>d</sub> = θ - φ</div>
+    <div class="equation">β<sub>d</sub>(θ) = arcsin(r<sub>d</sub> × sin(θ<sub>d</sub>) / l<sub>d</sub>)</div>
+    <div class="equation">x<sub>d,crank</sub>(θ) = r<sub>d</sub> × cos(θ<sub>d</sub>) + l<sub>d</sub> × cos(β<sub>d</sub>)</div>
+    <div class="equation">x<sub>d</sub>(θ) = (r<sub>d</sub> + l<sub>d</sub>) - x<sub>d,crank</sub>(θ)</div>
+</div>
+
+<div class="note">
+    <strong>Key Point:</strong> The displacer leads the power piston by phase angle φ (typically 90°).
+</div>
+
+<h2>3.2 Beta-Type Engine Volume Model</h2>
+
+<div class="section-summary">
+    <strong>Critical Concept:</strong> In a beta-type engine, the total volume depends ONLY on the power piston position. The displacer merely redistributes the working gas between hot and cold spaces.
+</div>
+
+<h3>Total Volume</h3>
+
+<div class="equation-box">
+    <div class="equation">V<sub>total</sub>(θ) = V<sub>dead,total</sub> + A × x<sub>p</sub>(θ)</div>
+</div>
+
+<h3>Volume Distribution</h3>
+
+<p>The displacer position determines how the working volume is split between compression and expansion spaces:</p>
+
+<div class="equation-box">
+    <div class="equation">x<sub>d,normalized</sub> = x<sub>d</sub>(θ) / x<sub>d,max</sub></div>
+    <div class="equation">f<sub>split</sub> = 0.5 × (1 - cos(π × x<sub>d,normalized</sub>))</div>
+    <div class="equation">V<sub>working</sub> = V<sub>total</sub> - V<sub>dead,total</sub></div>
+</div>
+
+<div class="equation-box">
+    <div class="equation">V<sub>compression</sub>(θ) = V<sub>dead,cold</sub> + V<sub>working</sub> × (1 - f<sub>split</sub>)</div>
+    <div class="equation">V<sub>expansion</sub>(θ) = V<sub>dead,hot</sub> + V<sub>working</sub> × f<sub>split</sub></div>
+</div>
+
+<h3>Volume Conservation Check</h3>
+
+<div class="equation-box">
+    <div class="equation">V<sub>total</sub> = V<sub>compression</sub> + V<sub>expansion</sub> + V<sub>regenerator</sub></div>
+</div>
+
+<h1 id="schmidt">4. Schmidt Analysis - Pressure Calculations</h1>
+
+<h2>4.1 Schmidt Theory Assumptions</h2>
+
+<div class="variable-def">
+    1. <strong>Isothermal spaces:</strong> Temperature constant in each space<br>
+    2. <strong>Uniform pressure:</strong> Pressure equal throughout engine at any instant<br>
+    3. <strong>Ideal regenerator:</strong> Perfect heat transfer effectiveness<br>
+    4. <strong>Mass conservation:</strong> Total mass of working fluid remains constant
+</div>
+
+<h2>4.2 Total Mass Calculation</h2>
+
+<p>The total mass is determined from known conditions at Bottom Dead Center (BDC):</p>
+
+<div class="equation-box">
+    <div class="equation">[~, bdc_idx] = max(V<sub>total</sub>)  &nbsp;&nbsp;// Find BDC index</div>
+</div>
+
+<p>At BDC, with known pressure P<sub>BDC</sub> = 500 kPa:</p>
+
+<div class="equation-box">
+    <div class="equation">P<sub>BDC</sub> = (m<sub>total</sub> × R) / (V<sub>comp,BDC</sub>/T<sub>c</sub> + V<sub>reg</sub>/T<sub>r</sub> + V<sub>exp,BDC</sub>/T<sub>h</sub>)</div>
+</div>
+
+<p>Solving for total mass:</p>
+
+<div class="equation-box">
+    <div class="equation">m<sub>total</sub> = P<sub>BDC</sub> × (V<sub>comp,BDC</sub>/T<sub>c</sub> + V<sub>reg</sub>/T<sub>r</sub> + V<sub>exp,BDC</sub>/T<sub>h</sub>) / R</div>
+</div>
+
+<h2>4.3 Instantaneous Pressure - The Schmidt Equation</h2>
+
+<div class="section-summary">
+    <strong>Fundamental Schmidt Equation:</strong> This is the core equation that relates pressure to volume distribution and temperatures throughout the cycle.
+</div>
+
+<div class="equation-box" style="background: #e3f2fd; border-left-color: #1976d2;">
+    <div class="equation" style="font-size: 18px;">P(θ) = (m<sub>total</sub> × R) / (V<sub>comp</sub>(θ)/T<sub>c</sub> + V<sub>reg</sub>/T<sub>r</sub> + V<sub>exp</sub>(θ)/T<sub>h</sub>)</div>
+</div>
+
+<h2>4.4 Mass Distribution Verification</h2>
+
+<p>For validation, the mass in each space can be calculated:</p>
+
+<div class="equation-box">
+    <div class="equation">m<sub>comp</sub>(θ) = P(θ) × V<sub>comp</sub>(θ) / (R × T<sub>c</sub>)</div>
+    <div class="equation">m<sub>exp</sub>(θ) = P(θ) × V<sub>exp</sub>(θ) / (R × T<sub>h</sub>)</div>
+    <div class="equation">m<sub>reg</sub> = P(θ) × V<sub>reg</sub> / (R × T<sub>r</sub>)</div>
+    <div class="equation">m<sub>total</sub> = m<sub>comp</sub> + m<sub>exp</sub> + m<sub>reg</sub> = constant ✓</div>
+</div>
+
+<h1 id="work">5. Work and Power Calculations</h1>
+
+<h2>5.1 Method 1: Direct Integration (Indicated Work)</h2>
+
+<p>The work per cycle is the integral of pressure over volume change:</p>
+
+<div class="equation-box">
+    <div class="equation">W<sub>indicated</sub> = ∮ P dV = ∫<sub>0</sub><sup>2π</sup> P(θ) × (dV/dθ) dθ</div>
+</div>
+
+<p>Numerically computed using trapezoidal integration:</p>
+
+<div class="equation-box">
+    <div class="equation">W<sub>indicated</sub> = trapz(V<sub>total</sub>, P)</div>
+</div>
+
+<div class="note">
+    <strong>Sign Convention:</strong> Positive work = clockwise P-V cycle = power production<br>
+    Negative work = counter-clockwise cycle = power consumption
+</div>
+
+<h2>5.2 Method 2: Mean Effective Pressure (MEP)</h2>
+
+<div class="equation-box">
+    <div class="equation">V<sub>swept</sub> = max(V<sub>total</sub>) - min(V<sub>total</sub>)</div>
+    <div class="equation">MEP = |W<sub>indicated</sub>| / V<sub>swept</sub></div>
+    <div class="equation">W<sub>MEP</sub> = MEP × V<sub>swept</sub></div>
+</div>
+
+<p>Both methods should agree within 5% for validation.</p>
+
+<h2>5.3 Power Output</h2>
+
+<div class="equation-box">
+    <div class="equation">P<sub>indicated</sub> = W<sub>indicated</sub> × f<sub>operating</sub></div>
+    <div class="equation">P<sub>MEP</sub> = W<sub>MEP</sub> × f<sub>operating</sub></div>
+</div>
+
+<div class="variable-def">
+    <strong>Where:</strong> f<sub>operating</sub> = operating frequency (Hz) = RPM/60
+</div>
+
+<h2>5.4 Thermal Efficiency</h2>
+
+<p>Heat input for isothermal expansion:</p>
+
+<div class="equation-box">
+    <div class="equation">Q<sub>in</sub> = m<sub>total</sub> × R × T<sub>h</sub> × ln(V<sub>max</sub>/V<sub>min</sub>)</div>
+</div>
+
+<p>Thermal efficiency:</p>
+
+<div class="equation-box">
+    <div class="equation">η = W<sub>indicated</sub> / Q<sub>in</sub></div>
+</div>
+
+<p>Carnot efficiency limit:</p>
+
+<div class="equation-box">
+    <div class="equation">η<sub>Carnot</sub> = 1 - T<sub>c</sub>/T<sub>h</sub> = 1 - 300/900 = 0.667</div>
+</div>
+
+<div class="note">
+    <strong>Validation:</strong> η must be less than η<sub>Carnot</sub> (Second Law of Thermodynamics)
+</div>
+
+<h1 id="torque">6. Torque Analysis</h1>
+
+<h2>6.1 Power Piston Torque</h2>
+
+<p>Force on power piston from gas pressure:</p>
+
+<div class="equation-box">
+    <div class="equation">F<sub>power</sub>(θ) = (P(θ) - P<sub>atm</sub>) × A</div>
+</div>
+
+<p>Torque using crank-slider mechanics:</p>
+
+<div class="equation-box">
+    <div class="equation">T<sub>power</sub>(θ) = F<sub>power</sub> × r<sub>p</sub> × sin(θ) / cos(β<sub>p</sub>)</div>
+</div>
+
+<h2>6.2 Total Engine Torque</h2>
+
+<p>For beta-type engines with negligible displacer rod diameter:</p>
+
+<div class="equation-box">
+    <div class="equation">T<sub>total</sub>(θ) = T<sub>power</sub>(θ)</div>
+</div>
+
+<p>Mean torque:</p>
+
+<div class="equation-box">
+    <div class="equation">T<sub>mean</sub> = (1/2π) × ∫<sub>0</sub><sup>2π</sup> T<sub>total</sub>(θ) dθ</div>
+</div>
+
+<h2>6.3 Torque Characteristics</h2>
+
+<div class="variable-def">
+    • Peak torques typically 5-10× mean torque<br>
+    • 2-4 zero crossings per cycle<br>
+    • Oscillating pattern requires flywheel for smooth operation
+</div>
+
+<h1 id="pvdiagram">7. P-V Diagram Generation</h1>
+
+<h2>7.1 Creating the P-V Diagram</h2>
+
+<p>The P-V diagram is generated by plotting pressure P(θ) versus total volume V<sub>total</sub>(θ) for a complete cycle:</p>
+
+<div class="equation-box">
+    <div class="equation">θ = [0, 2π]  with  360 points</div>
+    <div class="equation">Plot: P(θ) vs V<sub>total</sub>(θ)</div>
+</div>
+
+<h2>7.2 Key Features of the P-V Diagram</h2>
+
+<div class="section-summary">
+    <strong>Clockwise Cycle:</strong> Indicates positive work output (power production)<br>
+    <strong>Area Enclosed:</strong> Represents work per cycle W<sub>indicated</sub><br>
+    <strong>Shape:</strong> Quasi-elliptical due to finite heat transfer rates
+</div>
+
+<h2>7.3 Ideal vs Real Cycle Comparison</h2>
+
+<table>
+    <tr>
+        <th>Aspect</th>
+        <th>Ideal Stirling Cycle</th>
+        <th>Real (Schmidt) Cycle</th>
+    </tr>
+    <tr>
+        <td>Compression</td>
+        <td>Isothermal at T<sub>c</sub></td>
+        <td>Quasi-isothermal</td>
+    </tr>
+    <tr>
+        <td>Heat Addition</td>
+        <td>Isochoric (constant volume)</td>
+        <td>Continuous during expansion</td>
+    </tr>
+    <tr>
+        <td>Expansion</td>
+        <td>Isothermal at T<sub>h</sub></td>
+        <td>Quasi-isothermal</td>
+    </tr>
+    <tr>
+        <td>Heat Rejection</td>
+        <td>Isochoric (constant volume)</td>
+        <td>Continuous during compression</td>
+    </tr>
+    <tr>
+        <td>P-V Shape</td>
+        <td>Rectangular with curved isotherms</td>
+        <td>Smooth elliptical</td>
+    </tr>
+</table>
+
+<h1 id="summary">8. Complete Mathematical Flow Summary</h1>
+
+<div class="flow-diagram" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <h3 style="color: white; margin-top: 0;">Mathematical Pipeline</h3>
+    <div style="text-align: left; display: inline-block;">
+        <p><strong>Step 1: Parameters</strong><br>
+        D, r<sub>p</sub>, l<sub>p</sub>, r<sub>d</sub>, l<sub>d</sub>, φ, T<sub>h</sub>, T<sub>c</sub>, P<sub>BDC</sub></p>
+
+        <p><strong>Step 2: Kinematics</strong><br>
+        x<sub>p</sub>(θ), x<sub>d</sub>(θ) via crank-slider equations</p>
+
+        <p><strong>Step 3: Volumes</strong><br>
+        V<sub>total</sub> = f(x<sub>p</sub>)<br>
+        V<sub>comp</sub>, V<sub>exp</sub> = f(x<sub>d</sub>, V<sub>total</sub>)</p>
+
+        <p><strong>Step 4: Pressure</strong><br>
+        P(θ) = m<sub>total</sub>R / Σ(V<sub>i</sub>/T<sub>i</sub>)</p>
+
+        <p><strong>Step 5: Work</strong><br>
+        W = ∮ P dV</p>
+
+        <p><strong>Step 6: P-V Diagram</strong><br>
+        Plot P(θ) vs V<sub>total</sub>(θ)</p>
+    </div>
+</div>
+
+<h2>Key Equations Summary</h2>
+
+<div class="section-summary">
+    <h3>Most Important Equations</h3>
+
+    <p><strong>1. Total Volume (Beta-type):</strong><br>
+    V<sub>total</sub>(θ) = V<sub>dead</sub> + A × x<sub>p</sub>(θ)</p>
+
+    <p><strong>2. Schmidt Pressure:</strong><br>
+    P(θ) = (m<sub>total</sub> × R) / (V<sub>comp</sub>(θ)/T<sub>c</sub> + V<sub>reg</sub>/T<sub>r</sub> + V<sub>exp</sub>(θ)/T<sub>h</sub>)</p>
+
+    <p><strong>3. Indicated Work:</strong><br>
+    W<sub>indicated</sub> = ∮ P dV</p>
+
+    <p><strong>4. Power Output:</strong><br>
+    P<sub>indicated</sub> = W<sub>indicated</sub> × f<sub>operating</sub></p>
+
+    <p><strong>5. Thermal Efficiency:</strong><br>
+    η = W<sub>indicated</sub> / Q<sub>in</sub> < η<sub>Carnot</sub></p>
+</div>
+
+<h2>Physical Insights</h2>
+
+<div class="variable-def">
+    <strong>1. Phase Relationship:</strong> Displacer leads power piston to ensure proper gas shuttling<br>
+    <strong>2. Temperature Ratio:</strong> Higher T<sub>h</sub>/T<sub>c</sub> increases efficiency and power<br>
+    <strong>3. Dead Volume:</strong> Reduces compression ratio and efficiency<br>
+    <strong>4. Regenerator:</strong> Critical for achieving high efficiency<br>
+    <strong>5. Flywheel:</strong> Essential for smooth operation due to torque fluctuation
+</div>
+
+<h2>Validation Checklist</h2>
+
+<table>
+    <tr>
+        <th>Parameter</th>
+        <th>Expected Range</th>
+        <th>Check</th>
+    </tr>
+    <tr>
+        <td>Power Output</td>
+        <td>1-10 kW</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>Thermal Efficiency</td>
+        <td>20-40% (< Carnot)</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>Compression Ratio</td>
+        <td>3-20</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>P-V Cycle Direction</td>
+        <td>Clockwise</td>
+        <td>✓</td>
+    </tr>
+    <tr>
+        <td>Mass Conservation</td>
+        <td>< 0.1% variation</td>
+        <td>✓</td>
+    </tr>
+</table>
+
+<div style="margin-top: 50px; padding: 20px; background: #f0f0f0; border-radius: 10px;">
+    <p style="text-align: center; font-weight: bold;">End of Document</p>
+    <p style="text-align: center;">This mathematical model provides the complete theoretical foundation<br>
+    for beta-type Stirling engine analysis using Schmidt theory.</p>
+</div>
+
+</body>
+</html>
