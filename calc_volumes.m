@@ -1,123 +1,46 @@
 function [totalVolume, expansionVolume, compressionVolume, powerPistonPosition, displacerPosition] = calc_volumes(crankAngle, params)
-    % CALC_VOLUMES Calculate instantaneous volumes for Beta-type Stirling engine
+    % CALC_VOLUMES Calculate instantaneous volumes in Stirling engine
     %
     % Inputs:
-    %   crankAngle - crank angle array (radians)
+    %   crankAngle - crank angle (radians)
     %   params - engine parameters structure
     %
     % Outputs:
     %   totalVolume - total gas volume (m^3)
-    %   expansionVolume - expansion space volume (m^3)
-    %   compressionVolume - compression space volume (m^3)
-    %   powerPistonPosition - power piston position (m)
-    %   displacerPosition - displacer position (m)
-
-    % Extract parameters with descriptive names
-    powerCrankRadius = params.powerCrankLength;
-    powerConnectingRodLength = params.powerRodLength;
-    displacerCrankRadius = params.displacerCrankLength;
-    displacerConnectingRodLength = params.displacerRodLength;
-    phaseAngle = params.phaseShift;
-    cylinderCrossSectionalArea = params.cylinderArea;
-
-    % Validate crank-slider geometry
-    if powerConnectingRodLength <= powerCrankRadius
-        error('Power piston connecting rod must be longer than crank radius');
-    end
-    if displacerConnectingRodLength <= displacerCrankRadius
-        error('Displacer connecting rod must be longer than crank radius');
-    end
+    %   expansionVolume - hot space volume (m^3)
+    %   compressionVolume - cold space volume (m^3)
+    %   powerPistonPosition - position of power piston (m)
+    %   displacerPosition - position of displacer (m)
 
     % Calculate piston positions using crank-slider kinematics
-    % Position measured from TDC (Top Dead Center)
+    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
+    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
 
-    % Power piston position (compression space)
-    powerConnectingRodAngle = asin(powerCrankRadius * sin(crankAngle) / powerConnectingRodLength);
-    powerPistonPositionFromCrank = powerCrankRadius * cos(crankAngle) + powerConnectingRodLength * cos(powerConnectingRodAngle);
-    powerPistonAtTDC = powerCrankRadius + powerConnectingRodLength;  % Position at TDC
-    powerPistonPosition = powerPistonAtTDC - powerPistonPositionFromCrank;  % Distance from TDC
+    % Calculate volumes based on physical geometry
+    coldVol = calculateColdVolume(crankAngle, params);
+    hotVol = calculateHotVolume(crankAngle, params);
 
-    % Displacer position (with phase shift)
-    displacerCrankAngle = crankAngle - phaseAngle;  % Displacer leads by phase angle
-    displacerConnectingRodAngle = asin(displacerCrankRadius * sin(displacerCrankAngle) / displacerConnectingRodLength);
-    displacerPositionFromCrank = displacerCrankRadius * cos(displacerCrankAngle) + displacerConnectingRodLength * cos(displacerConnectingRodAngle);
-    displacerAtTDC = displacerCrankRadius + displacerConnectingRodLength;
-    displacerPosition = displacerAtTDC - displacerPositionFromCrank;
+    % Assign outputs
+    compressionVolume = coldVol.volume;
+    expansionVolume = hotVol.volume;
+    totalVolume = compressionVolume + expansionVolume + params.regeneratorVolume;
 
-    % Calculate instantaneous volumes for beta-type Stirling engine
-    % PROPER BETA-TYPE MODEL: Total volume depends ONLY on power piston
-    % Displacer only shuttles gas between hot and cold spaces
+    % Store piston positions
+    powerPistonPosition = powerPistonPos;
+    displacerPosition = displacerPos;
 
-    % In a beta-type engine:
-    % - Power piston changes total gas volume
-    % - Displacer moves gas between hot and cold spaces without changing total volume
-    % - Total volume = f(power piston position only)
+    % Verify volume conservation
+    volumeConservationCheck = abs(totalVolume - (compressionVolume + expansionVolume + params.regeneratorVolume));
+    if any(volumeConservationCheck > 1e-10)
+        error('Volume conservation violated');
+    end
 
-    % Total gas volume (depends ONLY on power piston position)
-    % Power piston at x=0 (TDC) gives minimum volume
-    % Power piston at x=2*powerCrankRadius (BDC) gives maximum volume
-    totalVolume = params.totalDeadVolume + cylinderCrossSectionalArea * powerPistonPosition;
-
-    % Regenerator volume (constant dead volume)
-    regeneratorVolume = params.regeneratorVolume;
-
-    % For Beta-type engine, we need to model how the displacer
-    % shuttles gas between hot and cold spaces
-    % The key is that the displacer affects the DISTRIBUTION not the TOTAL
-
-    % Working gas volume (excluding dead volumes)
-    workingGasVolume = totalVolume - params.totalDeadVolume;
-
-    % Calculate how displacer position affects gas distribution
-    % Normalize displacer position (0 at TDC, max at BDC)
-    displacerMaximumStroke = 2 * displacerCrankRadius;  % Maximum stroke of displacer
-
-    % Calculate fraction of gas in compression space based on displacer position
-    % When displacerPosition = 0 (TDC), most gas is in expansion space
-    % When displacerPosition = displacerMaximumStroke (BDC), most gas is in compression space
-    normalizedDisplacerPosition = displacerPosition / displacerMaximumStroke;  % 0 to 1 normalized position
-
-    % For Beta-type engine, displacer shuttles gas between hot and cold spaces
-    % The displacer position affects the distribution, not the total volume
-    % Use a smooth transition based on displacer position
-
-    % Split the working volume between hot and cold spaces
-    % When normalizedDisplacerPosition = 0 (TDC), more gas in expansion (hot) space
-    % When normalizedDisplacerPosition = 1 (BDC), more gas in compression (cold) space
-
-    % Use smooth sinusoidal transition for realistic gas distribution
-    % This accounts for the gradual gas transfer as displacer moves
-    volumeSplitFactor = 0.5 * (1 - cos(pi * normalizedDisplacerPosition));
-
-    % Compression space (cold) volume
-    % NOTE: Displacer rod diameter is ignored in volume calculations per project specifications
-    % The rod only affects torque calculations, not gas volume distribution
-    compressionVolume = params.deadVolumeCold + workingGasVolume .* volumeSplitFactor;
-
-    % Expansion space (hot) volume
-    expansionVolume = params.deadVolumeHot + workingGasVolume .* (1 - volumeSplitFactor);
-
-    % Regenerator volume stays constant
-    % Note: totalVolume = compressionVolume + expansionVolume + regeneratorVolume should be satisfied
-
-    % Alternative more physical calculation:
-    % When displacer moves down, it pushes gas from cold to hot
-    % compressionVolume = params.deadVolumeCold + portion of cylinder above displacer
-    % expansionVolume = params.deadVolumeHot + portion of cylinder below displacer
-
-    % Ensure conservation: totalVolume = compressionVolume + expansionVolume + regeneratorVolume
-    % This is automatically satisfied by our calculation
-
-    % Validate results
+    % Check for negative volumes
     if any(compressionVolume < 0) || any(expansionVolume < 0)
-        error('Negative volume detected - check geometry parameters');
+        error('Negative volume detected');
     end
 
-    if any(totalVolume < params.totalDeadVolume)
-        error('Total volume less than dead volume - check calculations');
-    end
-
-    % Calculate and display volume characteristics (only on first call)
+    % Display volume analysis on first call
     persistent displayed;
     if isempty(displayed)
         maximumVolume = max(totalVolume);
@@ -125,14 +48,61 @@ function [totalVolume, expansionVolume, compressionVolume, powerPistonPosition, 
         actualCompressionRatio = maximumVolume / minimumVolume;
 
         fprintf('Volume Analysis:\n');
-        fprintf('  Max Volume: %.4f L\n', maximumVolume * 1000);
-        fprintf('  Min Volume: %.4f L\n', minimumVolume * 1000);
-        fprintf('  Compression Ratio: %.3f\n', actualCompressionRatio);
-        fprintf('  Swept Volume (Power): %.4f L\n', params.powerSweptVolume * 1000);
-        fprintf('  Swept Volume (Displacer): %.4f L\n', params.displacerSweptVolume * 1000);
-        fprintf('  Dead Volume: %.4f L\n', params.totalDeadVolume * 1000);
+        fprintf('  Max Volume: %.2f cm³\n', maximumVolume * 1e6);
+        fprintf('  Min Volume: %.2f cm³\n', minimumVolume * 1e6);
+        fprintf('  Compression Ratio: %.2f\n', actualCompressionRatio);
+        fprintf('  Swept Volume (Power): %.2f cm³\n', params.powerSweptVolume * 1e6);
+        fprintf('  Dead Volume (Regenerator): %.2f cm³\n', params.regeneratorVolume * 1e6);
         fprintf('\n');
 
         displayed = true;
     end
+end
+
+function pistonPosition = calculatePistonPosition(crankAngle, crankLength, rodLength)
+    % Calculate piston position using crank-slider kinematics
+    % Position is relative to bottom dead center (BDC)
+    beta = asin(crankLength * sin(crankAngle) / rodLength);
+    pistonPosition = rodLength * cos(beta) - crankLength * cos(crankAngle);
+end
+
+function coldVol = calculateColdVolume(crankAngle, params)
+    % Calculate cold volume based on beta engine geometry
+    % Cold volume = space between displacer bottom and power piston top
+
+    % Calculate piston positions
+    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
+    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+
+    % Calculate cold side height
+    % Distance between displacer and power piston, minus powerPinToPistonTop, minus half displacer height
+    coldVol.height = (displacerPos - powerPistonPos) - params.powerPinToPistonTop - (params.displacerHeight / 2);
+
+    % Calculate cold volume
+    coldVol.volume = params.cylinderCrossSectionalArea * coldVol.height;
+
+    % Ensure volume is non-negative
+    coldVol.volume = max(coldVol.volume, 0);
+end
+
+function hotVol = calculateHotVolume(crankAngle, params)
+    % Calculate hot volume based on beta engine geometry
+    % Hot volume = space between displacer top and cylinder head
+
+    % Calculate piston positions
+    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
+    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+
+    % Calculate cold side height (same as in calculateColdVolume)
+    coldHeight = (displacerPos - powerPistonPos) - params.powerPinToPistonTop - (params.displacerHeight / 2);
+
+    % Calculate hot side height
+    % Hot height = ColdHotHeight - cold height
+    hotVol.height = params.totalCylinderHeight - 0.5 * params.displacerHeight - displacerPos;
+
+    % Calculate hot volume
+    hotVol.volume = params.cylinderCrossSectionalArea * hotVol.height;
+
+    % Ensure volume is non-negative
+    hotVol.volume = max(hotVol.volume, 0);
 end

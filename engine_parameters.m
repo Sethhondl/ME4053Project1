@@ -20,10 +20,6 @@ function params = engine_parameters()
     params.cylinderBore = 0.050;             % m (50 mm diameter) - from given parameters
     params.cylinderArea = pi * (params.cylinderBore/2)^2;  % m^2
 
-    %% Calculate Swept Volumes (needed for dead volume calculation)
-    params.powerSweptVolume = params.cylinderArea * 2 * params.powerCrankLength;  % m^3
-    params.displacerSweptVolume = params.cylinderArea * 2 * params.displacerCrankLength;  % m^3
-
     %% Operating Parameters
     params.phaseShift = pi/2;                % radians (90 degrees) - from given parameters
     params.compressionRatio = 1.7;           % dimensionless - from given parameters
@@ -31,31 +27,13 @@ function params = engine_parameters()
     %% Temperature Conditions
     params.hotTemperature = 900;                       % K (hot temperature) - from given parameters
     params.coldTemperature = 300;                      % K (cold temperature) - from given parameters
-    params.regeneratorTemperature = (params.hotTemperature + params.coldTemperature) / 2;  % K (average)
 
     %% Pressure Conditions
     params.pressureAtBDC = 500e3;                     % Pa (500 kPa at bottom dead center) - from given parameters
     params.atmosphericPressure = 101.3e3;             % Pa (101.3 kPa) - from given parameters
 
-    %% Dead Volumes (calculated to achieve compression ratio of 1.7)
-    % Given compression ratio = 1.7
-    % CR = V_max / V_min = (swept + dead) / dead
-    % Therefore: dead = swept / (CR - 1)
-    targetCompressionRatio = 1.7;  % from given parameters
-
-    % Calculate required total dead volume
-    requiredTotalDeadVolume = params.powerSweptVolume / (targetCompressionRatio - 1);
-
-    % Given regenerator volume
+    %% Regenerator Volume
     params.regeneratorVolume = 2e-5;             % m^3 (20 cm^3) - from given parameters
-
-    % Remaining dead volume to distribute between hot and cold spaces
-    remainingDeadVolume = requiredTotalDeadVolume - params.regeneratorVolume;
-
-    % Distribute dead volume (40% hot, 60% cold typical for beta-type)
-    params.deadVolumeHot = 0.4 * remainingDeadVolume;     % m^3 (hot space dead volume)
-    params.deadVolumeCold = 0.6 * remainingDeadVolume;    % m^3 (cold space dead volume)
-    params.totalDeadVolume = params.deadVolumeHot + params.deadVolumeCold + params.regeneratorVolume;
 
     %% Working Fluid Properties (Air)
     params.gasConstant = 287;                       % J/(kg*K) - specific gas constant for air
@@ -88,21 +66,29 @@ function params = engine_parameters()
     params.maximumFlywheelDiameter = 2.0;                 % m
     params.minimumPressure = 0;                           % Pa (must be positive)
 
-    %% Calculated Derived Parameters
-    % Swept volumes already calculated above for dead volume calculation
+    %% ============== DERIVED GEOMETRIC CALCULATIONS ==============
+    % Cylinder cross-sectional area
+    params.cylinderCrossSectionalArea = pi/4*(params.cylinderBore)^2;
 
-    % For beta-type engine, compression ratio is based on power piston swept volume
-    % Maximum volume when power piston at BDC
-    params.maximumVolume = params.powerSweptVolume + params.totalDeadVolume;
-    % Minimum volume when power piston at TDC
-    params.minimumVolume = params.totalDeadVolume;
+    % Displacer height from volume
+    params.displacerHeight = params.displacerVolume / params.cylinderCrossSectionalArea;
 
-    % Check compression ratio
-    calculatedCompressionRatio = params.maximumVolume / params.minimumVolume;
-    if abs(calculatedCompressionRatio - params.compressionRatio) > 0.1
-        % Use the calculated value
-        params.compressionRatio = calculatedCompressionRatio;
-    end
+    % Calculate power piston positions at BDC and TDC
+    powerPistonPosBDC = params.powerRodLength * (1 - cos(asin(params.powerCrankLength * sin(0) / params.powerRodLength))) - params.powerCrankLength * cos(0) + params.powerRodLength + params.powerCrankLength;
+    powerPistonPosTDC = params.powerRodLength * (1 - cos(asin(params.powerCrankLength * sin(pi) / params.powerRodLength))) - params.powerCrankLength * cos(pi) + params.powerRodLength + params.powerCrankLength;
+
+    % Calculate swept volume
+    params.powerSweptVolume = params.cylinderCrossSectionalArea * (powerPistonPosTDC - powerPistonPosBDC);
+
+    % Total volume at BDC from compression ratio
+    params.totalVolumeBDC = params.regeneratorVolume - params.displacerVolume + (params.compressionRatio * params.powerSweptVolume) / (params.compressionRatio - 1);
+
+    % Cylinder heights
+    params.ColdHotHeight = params.totalVolumeBDC / params.cylinderCrossSectionalArea;
+    params.totalCylinderHeight = params.ColdHotHeight + params.displacerHeight + params.powerPinToPistonTop + params.powerRodLength - params.powerCrankLength;
+
+    % Regenerator temperature
+    params.regeneratorTemperature = (params.hotTemperature + params.coldTemperature) / 2;
 
     %% Display Configuration Summary
     fprintf('\n=== STIRLING ENGINE CONFIGURATION ===\n');

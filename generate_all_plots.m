@@ -209,53 +209,153 @@ function generate_all_plots(results, params)
     % Save plot
     saveas(gcf, 'results/velocity_variation.png');
     
-    %% Plot 4: Energy per Cycle vs Phase Angle
-    figure('Position', [400, 250, 800, 600]);
-    
-    % Create subplot for energy and power
-    subplot(2,1,1);
-    plot(results.optimization.energy_curve(:,1), ...
-         results.optimization.energy_curve(:,2), 'b-o', 'LineWidth', 2);
+    %% Plot 4: Enhanced Phase Optimization with Multiple Metrics
+    figure('Position', [400, 250, 1000, 800]);
+
+    % Subplot 1: Power vs Phase with optimization stages
+    subplot(3,2,1);
+    % Plot all evaluation points with different markers for each stage
+    phases = results.optimization.power_curve(:,1);
+    powers = results.optimization.power_curve(:,2);
+
+    % Create smooth interpolated curve
+    phase_fine = min(phases):0.1:max(phases);
+    power_smooth = interp1(phases, powers, phase_fine, 'pchip');
+    plot(phase_fine, power_smooth/1000, 'b-', 'LineWidth', 2);
     hold on;
-    
+
+    % Plot actual evaluation points
+    scatter(phases, powers/1000, 20, 'ko', 'filled', 'MarkerFaceAlpha', 0.5);
+
     % Mark optimal point
-    [~, opt_idx] = max(results.optimization.energy_curve(:,2));
-    plot(results.optimization.energy_curve(opt_idx,1), ...
-         results.optimization.energy_curve(opt_idx,2), ...
-         'r*', 'MarkerSize', 15, 'LineWidth', 2);
-    
+    [max_power, opt_idx] = max(powers);
+    plot(phases(opt_idx), max_power/1000, 'r*', 'MarkerSize', 15, 'LineWidth', 2);
+
     % Mark current setting
     current_phase = params.phaseShift * 180/pi;
-    plot(current_phase, interp1(results.optimization.energy_curve(:,1), ...
-         results.optimization.energy_curve(:,2), current_phase), ...
-         'gs', 'MarkerSize', 10, 'MarkerFaceColor', 'g', 'LineWidth', 2);
-    
-    xlabel('Phase Angle (degrees)', 'FontSize', 11);
-    ylabel('Energy per Cycle (J)', 'FontSize', 11);
-    title('Energy and Power vs Phase Angle', 'FontSize', 13, 'FontWeight', 'bold');
-    legend('Energy', sprintf('Optimal (%.0f°)', results.optimal_phase), ...
-           sprintf('Current (%.0f°)', current_phase), 'Location', 'best');
+    if current_phase >= min(phases) && current_phase <= max(phases)
+        current_power = interp1(phases, powers, current_phase, 'pchip');
+        plot(current_phase, current_power/1000, 'gs', 'MarkerSize', 12, ...
+             'MarkerFaceColor', 'g', 'LineWidth', 2);
+    end
+
+    xlabel('Phase Angle (°)', 'FontSize', 10);
+    ylabel('Power Output (kW)', 'FontSize', 10);
+    title('Power Optimization', 'FontSize', 11, 'FontWeight', 'bold');
+    legend('Interpolated', 'Evaluated', sprintf('Optimal (%.1f°)', phases(opt_idx)), ...
+           sprintf('Current (%.0f°)', current_phase), 'Location', 'best', 'FontSize', 8);
     grid on;
-    xlim([45, 135]);  % Expanded range
-    
-    % Power subplot
-    subplot(2,1,2);
-    plot(results.optimization.power_curve(:,1), ...
-         results.optimization.power_curve(:,2)/1000, 'r-o', 'LineWidth', 2);
+    xlim([min(phases)-5, max(phases)+5]);
+
+    % Subplot 2: Efficiency vs Phase
+    subplot(3,2,2);
+    efficiencies = results.optimization.efficiency_curve(:,2) * 100;
+    eff_smooth = interp1(phases, efficiencies, phase_fine, 'pchip');
+    plot(phase_fine, eff_smooth, 'g-', 'LineWidth', 2);
     hold on;
-    
-    % Mark optimal point
-    [~, opt_idx] = max(results.optimization.power_curve(:,2));
-    plot(results.optimization.power_curve(opt_idx,1), ...
-         results.optimization.power_curve(opt_idx,2)/1000, ...
-         'b*', 'MarkerSize', 15, 'LineWidth', 2);
-    
-    xlabel('Phase Angle (degrees)', 'FontSize', 11);
-    ylabel('Power Output (kW)', 'FontSize', 11);
-    legend('Power', sprintf('Maximum (%.0f°)', ...
-           results.optimization.power_curve(opt_idx,1)), 'Location', 'best');
+    scatter(phases, efficiencies, 20, 'ko', 'filled', 'MarkerFaceAlpha', 0.5);
+
+    % Mark maximum efficiency
+    [max_eff, eff_idx] = max(efficiencies);
+    plot(phases(eff_idx), max_eff, 'r*', 'MarkerSize', 15, 'LineWidth', 2);
+
+    xlabel('Phase Angle (°)', 'FontSize', 10);
+    ylabel('Efficiency (%)', 'FontSize', 10);
+    title('Efficiency Optimization', 'FontSize', 11, 'FontWeight', 'bold');
+    legend('Interpolated', 'Evaluated', sprintf('Maximum (%.1f°)', phases(eff_idx)), ...
+           'Location', 'best', 'FontSize', 8);
     grid on;
-    xlim([45, 135]);  % Expanded range
+    xlim([min(phases)-5, max(phases)+5]);
+
+    % Subplot 3: Energy per cycle
+    subplot(3,2,3);
+    energies = results.optimization.energy_curve(:,2);
+    energy_smooth = interp1(phases, energies, phase_fine, 'pchip');
+    plot(phase_fine, energy_smooth, 'm-', 'LineWidth', 2);
+    hold on;
+    scatter(phases, energies, 20, 'ko', 'filled', 'MarkerFaceAlpha', 0.5);
+
+    [max_energy, energy_idx] = max(energies);
+    plot(phases(energy_idx), max_energy, 'r*', 'MarkerSize', 15, 'LineWidth', 2);
+
+    xlabel('Phase Angle (°)', 'FontSize', 10);
+    ylabel('Energy per Cycle (J)', 'FontSize', 10);
+    title('Energy per Cycle', 'FontSize', 11, 'FontWeight', 'bold');
+    grid on;
+    xlim([min(phases)-5, max(phases)+5]);
+
+    % Subplot 4: Combined normalized view
+    subplot(3,2,4);
+    % Normalize all metrics to 0-1 scale
+    power_norm = (powers - min(powers)) / (max(powers) - min(powers));
+    eff_norm = (efficiencies - min(efficiencies)) / (max(efficiencies) - min(efficiencies));
+    energy_norm = (energies - min(energies)) / (max(energies) - min(energies));
+
+    plot(phases, power_norm, 'b-o', 'LineWidth', 1.5, 'MarkerSize', 4);
+    hold on;
+    plot(phases, eff_norm, 'g-s', 'LineWidth', 1.5, 'MarkerSize', 4);
+    plot(phases, energy_norm, 'm-d', 'LineWidth', 1.5, 'MarkerSize', 4);
+
+    xlabel('Phase Angle (°)', 'FontSize', 10);
+    ylabel('Normalized Value', 'FontSize', 10);
+    title('Normalized Comparison', 'FontSize', 11, 'FontWeight', 'bold');
+    legend('Power', 'Efficiency', 'Energy', 'Location', 'best', 'FontSize', 8);
+    grid on;
+    xlim([min(phases)-5, max(phases)+5]);
+    ylim([0, 1.05]);
+
+    % Subplot 5: Optimization convergence (if data available)
+    subplot(3,2,5);
+    % Show gradient of power curve
+    dP_dphi = gradient(powers) ./ gradient(phases);
+    plot(phases(2:end-1), dP_dphi(2:end-1), 'r-', 'LineWidth', 1.5);
+    hold on;
+    plot([min(phases), max(phases)], [0, 0], 'k--', 'LineWidth', 0.5);
+
+    xlabel('Phase Angle (°)', 'FontSize', 10);
+    ylabel('dP/dφ (W/°)', 'FontSize', 10);
+    title('Power Gradient', 'FontSize', 11, 'FontWeight', 'bold');
+    grid on;
+    xlim([min(phases)-5, max(phases)+5]);
+
+    % Subplot 6: Performance summary table
+    subplot(3,2,6);
+    axis off;
+
+    % Create summary text
+    % Check if current phase is within optimization range
+    if current_phase >= min(phases) && current_phase <= max(phases)
+        current_power_interp = interp1(phases, powers, current_phase, 'pchip');
+        current_eff_interp = interp1(phases, efficiencies, current_phase, 'pchip');
+    else
+        current_power_interp = NaN;
+        current_eff_interp = NaN;
+    end
+
+    summary_text = sprintf(['\\fontsize{10}\\bf{Optimization Summary}\n\n' ...
+                           '\\rm{Optimal Phase (Power): %.1f°}\n' ...
+                           '  Power: %.2f W (%.3f kW)\n' ...
+                           '  Efficiency: %.1f%%\n\n' ...
+                           '\\rm{Optimal Phase (Efficiency): %.1f°}\n' ...
+                           '  Efficiency: %.1f%%\n' ...
+                           '  Power: %.2f W\n\n' ...
+                           '\\rm{Current Setting: %.0f°}\n' ...
+                           '  Power: %.2f W\n' ...
+                           '  Efficiency: %.1f%%\n\n' ...
+                           '\\rm{Evaluations: %d points}'], ...
+                           phases(opt_idx), max_power, max_power/1000, ...
+                           efficiencies(opt_idx), ...
+                           phases(eff_idx), max_eff, powers(eff_idx), ...
+                           current_phase, ...
+                           current_power_interp, ...
+                           current_eff_interp, ...
+                           length(phases));
+
+    text(0.1, 0.9, summary_text, 'Units', 'normalized', ...
+         'VerticalAlignment', 'top', 'FontName', 'FixedWidth');
+
+    % Overall figure title
+    sgtitle('Phase Angle Optimization Analysis', 'FontSize', 14, 'FontWeight', 'bold');
     
     % Save plot
     saveas(gcf, 'results/phase_optimization.png');
