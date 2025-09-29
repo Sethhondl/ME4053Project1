@@ -44,7 +44,7 @@ function display_results(results, params)
     fprintf('  Status: %s (must be < Carnot)\n\n', check_status(results.efficiency < eta_carnot));
 
     fprintf('TORQUE ANALYSIS:\n');
-    fprintf('  Mean Torque: %.2f N·m\n', results.T_mean);
+    fprintf('  Mean Torque: %.2f N·m\n', abs(results.T_mean));
     fprintf('  Max Torque: %.2f N·m\n', max(results.T_total));
     fprintf('  Min Torque: %.2f N·m\n\n', min(results.T_total));
 
@@ -55,7 +55,7 @@ function display_results(results, params)
 
     fprintf('PHASE ANGLE OPTIMIZATION:\n');
     fprintf('  Current Phase: %.0f°\n', params.phaseShift * 180/pi);
-    fprintf('  Optimal Phase: %.0f°\n', results.optimal_phase * 180/pi);
+    fprintf('  Optimal Phase: %.3f°\n', results.optimal_phase);
     fprintf('  Power at Current: %.3f W\n', results.P_indicated);
     fprintf('  Max Power at Optimal: %.3f W\n\n', max(results.optimization.power_curve));
 

@@ -51,7 +51,19 @@ function generate_all_plots(results, params)
     saveas(gcf, 'results/torque_profile.png');
 
     figure('Position', [100, 500, 800, 600]);
-    phase_range = linspace(60, 120, length(results.optimization.power_curve));
+    % Create phase range matching the optimization data
+    % Use combined coarse (60:5:120) and fine (100:0.1:110) resolution
+    coarse_phases = 60:5:120;
+    fine_phases = 100:0.1:110;
+    phase_range = unique([coarse_phases, fine_phases]);
+
+    % The optimization returns data at these phase points
+    % Ensure we have the right number of points
+    if length(phase_range) ~= length(results.optimization.power_curve)
+        % If mismatch, use simple linear spacing as fallback
+        phase_range = linspace(60, 120, length(results.optimization.power_curve));
+    end
+
     yyaxis left;
     plot(phase_range, results.optimization.power_curve/1000, 'b-', 'LineWidth', 2);
     ylabel('Power Output (kW)');
@@ -61,8 +73,9 @@ function generate_all_plots(results, params)
     xlabel('Phase Angle (degrees)');
     title('Phase Angle Optimization');
     grid on;
-    xline(results.optimal_phase * 180/pi, 'k:', 'LineWidth', 1.5);
-    legend('Power Output', 'Work per Cycle', sprintf('Optimal: %.0f°', results.optimal_phase * 180/pi), 'Location', 'south');
+    xlim([55, 125]);
+    xline(results.optimal_phase, 'k:', 'LineWidth', 1.5);
+    legend('Power Output', 'Work per Cycle', sprintf('Optimal: %.3f°', results.optimal_phase), 'Location', 'south');
     saveas(gcf, 'results/phase_optimization.png');
 
     figure('Position', [100, 700, 800, 600]);

@@ -107,30 +107,30 @@ function [optimal_phase, energy_curve, power_curve, efficiency_curve] = optimize
         optimal_phase_deg = ultra_optimal;
     end
 
-    %% Compile results for all evaluation points
-    all_phases = [coarse_range, fine_range, ultra_range];
-    all_power = [coarse_power, fine_power, ultra_power];
+    %% Compile results for plotting (exclude ultra-fine for better visualization)
+    % For plotting, use only coarse and fine resolution points
+    plot_phases = unique([coarse_range, fine_range]);
+    plot_power = zeros(size(plot_phases));
+    plot_energy = zeros(size(plot_phases));
+    plot_efficiency = zeros(size(plot_phases));
 
-    all_energy = zeros(size(all_phases));
-    all_efficiency = zeros(size(all_phases));
-
-    unique_phases = unique(all_phases);
-    power_curve = zeros(size(unique_phases));
-    energy_curve = zeros(size(unique_phases));
-    efficiency_curve = zeros(size(unique_phases));
-
-    for i = 1:length(unique_phases)
+    for i = 1:length(plot_phases)
         params_temp = params;
-        params_temp.phaseShift = unique_phases(i) * pi/180;
+        params_temp.phaseShift = plot_phases(i) * pi/180;
 
         [V_total, V_exp, V_comp, ~, ~] = calc_volumes(theta, params_temp);
         [P, ~, ~] = schmidt_analysis(theta, V_total, V_exp, V_comp, params_temp);
         [W_indicated, P_indicated, ~, ~, ~, efficiency] = calc_power(P, V_total, theta, params_temp);
 
-        power_curve(i) = P_indicated;
-        energy_curve(i) = W_indicated;
-        efficiency_curve(i) = efficiency;
+        plot_power(i) = P_indicated;
+        plot_energy(i) = W_indicated;
+        plot_efficiency(i) = efficiency;
     end
+
+    % Return plotting data (reasonable resolution for visualization)
+    power_curve = plot_power;
+    energy_curve = plot_energy;
+    efficiency_curve = plot_efficiency;
 
     %% Final validation at optimal point
     params_temp = params;
@@ -146,9 +146,9 @@ function [optimal_phase, energy_curve, power_curve, efficiency_curve] = optimize
     fprintf('Energy per cycle: %.3f J\n', W_opt);
 
     original_phase_deg = original_phase * 180/pi;
-    [~, orig_idx] = min(abs(unique_phases - original_phase_deg));
-    if orig_idx <= length(unique_phases)
-        improvement = (P_opt - power_curve(orig_idx)) / power_curve(orig_idx) * 100;
+    [~, orig_idx] = min(abs(plot_phases - original_phase_deg));
+    if orig_idx <= length(plot_phases)
+        improvement = (P_opt - plot_power(orig_idx)) / plot_power(orig_idx) * 100;
         fprintf('\nImprovement over %.0f°: %.2f%%\n', original_phase_deg, improvement);
     end
 
