@@ -1,32 +1,25 @@
 function [omega, alpha, rpm, Cs_actual] = simulate_dynamics(T_total, theta, I_flywheel, params)
-    % Simulate angular velocity variation with flywheel
-
-    omega_avg = params.averageAngularVelocity;
+    omega_avg = params.averageRPM * 2 * pi / 60;
     T_mean = mean(T_total);
-    T_load = T_mean;
-    T_net = T_total - T_load;
-    alpha = T_net / I_flywheel;
 
-    % Energy-based approach for velocity calculation
     omega = zeros(size(theta));
+    alpha = zeros(size(theta));
     omega(1) = omega_avg;
 
     for i = 2:length(theta)
         dtheta = theta(i) - theta(i-1);
-        dW = 0.5 * (T_net(i) + T_net(i-1)) * dtheta;
-        omega_squared = omega(i-1)^2 + 2 * dW / I_flywheel;
+        dt = dtheta / omega(i-1);
 
-        if omega_squared > 0
-            omega(i) = sqrt(omega_squared);
-        else
-            omega(i) = 0.1 * omega_avg;
+        T_net = T_total(i-1) - T_mean;
+        alpha(i-1) = T_net / I_flywheel;
+        omega(i) = omega(i-1) + alpha(i-1) * dt;
+
+        if omega(i) <= 0
+            error('Angular velocity became negative - increase flywheel inertia');
         end
     end
 
-    % Adjust to maintain correct average speed
-    omega_actual_avg = mean(omega);
-    omega = omega * (omega_avg / omega_actual_avg);
-
+    alpha(end) = alpha(end-1);
     rpm = omega * 60 / (2*pi);
 
     omega_max = max(omega);
@@ -34,7 +27,7 @@ function [omega, alpha, rpm, Cs_actual] = simulate_dynamics(T_total, theta, I_fl
     omega_mean = mean(omega);
     Cs_actual = (omega_max - omega_min) / omega_mean;
 
-    if any(omega <= 0)
-        error('Non-positive angular velocity detected');
+    if Cs_actual > params.flywheelCoefficientOfFluctuation * 1.1
+        warning('Actual Cs (%.4f) exceeds target (%.4f)', Cs_actual, params.flywheelCoefficientOfFluctuation);
     end
 end

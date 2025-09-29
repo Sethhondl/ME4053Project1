@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stirling Engine Volume Calculation: Method Comparison</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(to bottom, #f0f4f8, #ffffff);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .method-box {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .old-method {
+            background: #ffe5e5;
+            border: 2px solid #ff6b6b;
+        }
+
+        .new-method {
+            background: #e5ffe5;
+            border: 2px solid #51cf66;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .highlight {
+            background: #f39c12;
+            color: #2c3e50;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .problem {
+            background: #ffe5e5;
+            border-left: 4px solid #e74c3c;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .solution {
+            background: #e5ffe5;
+            border-left: 4px solid #27ae60;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .diagram {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .results-table th {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .results-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .key-insight {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .math-formula {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Times New Roman', serif;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .warning {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        ul li {
+            margin: 10px 0;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .flow-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .arrow {
+            font-size: 24px;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stirling Engine Volume Calculation: Method Comparison</h1>
+
+    <div class="key-insight">
+        <h3>🔑 Key Discovery</h3>
+        <p>The original method used an <strong>artificial volume distribution model</strong> that didn't represent the actual physical geometry of a beta-type Stirling engine. Peyton's method correctly models the <strong>actual physical spaces</strong> in the cylinder based on component positions.</p>
+    </div>
+
+    <h2>1. Fundamental Difference in Approach</h2>
+
+    <div class="comparison-container">
+        <div class="method-box old-method">
+            <h3>❌ Original Method (Incorrect)</h3>
+            <ul>
+                <li><span class="warning">Artificial Split:</span> Used a cosine-based "volumeSplitFactor"</li>
+                <li><span class="warning">No Physical Basis:</span> Factor didn't represent actual geometry</li>
+                <li><span class="warning">Dead Volume Fractions:</span> Used arbitrary 40/60 split</li>
+                <li><span class="warning">Abstract Model:</span> Treated volumes as mathematical abstractions</li>
+            </ul>
+        </div>
+
+        <div class="method-box new-method">
+            <h3>✅ Peyton's Method (Correct)</h3>
+            <ul>
+                <li><span class="success">Physical Geometry:</span> Calculates actual cylinder spaces</li>
+                <li><span class="success">Component-Based:</span> Based on piston and displacer positions</li>
+                <li><span class="success">No Artificial Splits:</span> Direct calculation from geometry</li>
+                <li><span class="success">Real Physics:</span> Models actual beta engine operation</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>2. Volume Calculation Details</h2>
+
+    <h3>Original Method (Problematic)</h3>
+    <div class="problem">
+        <p><strong>Problem:</strong> Used an artificial distribution factor that doesn't represent the actual engine geometry</p>
+    </div>
+
+    <div class="code-block">
+// Original Volume Calculation (INCORRECT)
+normalizedDisplacerPosition = displacerPosition / displacerMaximumStroke;
+<span class="highlight">volumeSplitFactor = 0.5 * (1 - cos(pi * normalizedDisplacerPosition));</span>
+
+// Artificial distribution of volume
+compressionVolume = deadVolumeCold + workingGasVolume * (1 - volumeSplitFactor);
+expansionVolume = deadVolumeHot + workingGasVolume * volumeSplitFactor;
+    </div>
+
+    <div class="math-formula">
+        V<sub>cold</sub> = V<sub>dead,cold</sub> + V<sub>working</sub> × (1 - 0.5(1 - cos(π × pos<sub>normalized</sub>)))
+    </div>
+
+    <h3>Peyton's Method (Correct)</h3>
+    <div class="solution">
+        <p><strong>Solution:</strong> Calculate actual physical spaces based on component positions</p>
+    </div>
+
+    <div class="code-block">
+// Peyton's Volume Calculation (CORRECT)
+// Calculate actual piston positions
+powerPistonPos = calculatePistonPosition(crankAngle, powerCrankLength, powerRodLength);
+displacerPos = calculatePistonPosition(crankAngle + phaseShift, displacerCrankLength, displacerRodLength);
+
+// <span class="highlight">Cold Volume = Physical space between displacer bottom and power piston top</span>
+coldHeight = (displacerPos - powerPistonPos) - powerPinToPistonTop - (displacerHeight / 2);
+coldVolume = cylinderCrossSectionalArea * coldHeight;
+
+// <span class="highlight">Hot Volume = Physical space between displacer top and cylinder head</span>
+hotHeight = totalCylinderHeight - 0.5 * displacerHeight - displacerPos;
+hotVolume = cylinderCrossSectionalArea * hotHeight;
+    </div>
+
+    <div class="math-formula">
+        V<sub>cold</sub> = A<sub>cylinder</sub> × (pos<sub>displacer</sub> - pos<sub>piston</sub> - offset<sub>piston</sub> - h<sub>displacer</sub>/2)<br>
+        V<sub>hot</sub> = A<sub>cylinder</sub> × (H<sub>total</sub> - h<sub>displacer</sub>/2 - pos<sub>displacer</sub>)
+    </div>
+
+    <h2>3. Critical Parameters Added</h2>
+
+    <div class="diagram">
+        <h3>New Geometric Parameters in Peyton's Method</h3>
+        <table class="results-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Calculation</th>
+            </tr>
+            <tr>
+                <td><strong>displacerHeight</strong></td>
+                <td>Physical height of displacer</td>
+                <td>displacerVolume / cylinderCrossSectionalArea</td>
+            </tr>
+            <tr>
+                <td><strong>totalCylinderHeight</strong></td>
+                <td>Total height from crank pin to cylinder head</td>
+                <td>Calculated from compression ratio and BDC volume</td>
+            </tr>
+            <tr>
+                <td><strong>totalVolumeBDC</strong></td>
+                <td>Total volume at bottom dead center</td>
+                <td>Based on compression ratio: CR × V<sub>swept</sub> / (CR - 1)</td>
+            </tr>
+            <tr>
+                <td><strong>powerPinToPistonTop</strong></td>
+                <td>Distance from pin to piston crown</td>
+                <td>5 mm (given)</td>
+            </tr>
+        </table>
+    </div>
+
+    <h2>4. Why the Original Method Failed</h2>
+
+    <div class="problem">
+        <h3>🚫 Problems with the Original Approach</h3>
+        <ol>
+            <li><strong>No Physical Basis:</strong> The cosine-based volumeSplitFactor had no relationship to actual component positions</li>
+            <li><strong>Incorrect Pressure Range:</strong> Resulted in 440-820 kPa instead of correct 475-1179 kPa</li>
+            <li><strong>Artificial Dead Volumes:</strong> Used arbitrary 40/60 split that doesn't exist in real engine</li>
+            <li><strong>Wrong Power Output:</strong> Only 136W instead of correct 255W</li>
+            <li><strong>Unrealistic Efficiency:</strong> 2.8% efficiency was unrealistically low</li>
+        </ol>
+    </div>
+
+    <h2>5. How Peyton's Method Works</h2>
+
+    <div class="flow-diagram">
+        <div class="flow-box">
+            <strong>Step 1</strong><br>
+            Calculate Piston Positions
+        </div>
+        <span class="arrow">→</span>
+        <div class="flow-box">
+            <strong>Step 2</strong><br>
+            Determine Physical Spaces
+        </div>
+        <span class="arrow">→</span>
+        <div class="flow-box">
+            <strong>Step 3</strong><br>
+            Calculate Volumes Directly
+        </div>
+        <span class="arrow">→</span>
+        <div class="flow-box">
+            <strong>Step 4</strong><br>
+            Apply Schmidt Analysis
+        </div>
+    </div>
+
+    <div class="solution">
+        <h3>✅ Why Peyton's Method Succeeds</h3>
+        <ol>
+            <li><strong>Physical Reality:</strong> Models actual cylinder geometry and component positions</li>
+            <li><strong>Direct Calculation:</strong> No artificial factors or arbitrary splits</li>
+            <li><strong>Proper Kinematics:</strong> Uses correct crank-slider equations for both pistons</li>
+            <li><strong>Volume Conservation:</strong> Total = Hot + Cold + Regenerator (always maintained)</li>
+            <li><strong>Correct Beta Engine Model:</strong> Displacer moves gas between spaces, doesn't change total volume</li>
+        </ol>
+    </div>
+
+    <h2>6. Results Comparison</h2>
+
+    <table class="results-table">
+        <tr>
+            <th>Metric</th>
+            <th>Original Method ❌</th>
+            <th>Peyton's Method ✅</th>
+            <th>Improvement</th>
+        </tr>
+        <tr>
+            <td>Pressure Range</td>
+            <td>440 - 820 kPa</td>
+            <td><strong>475 - 1179 kPa</strong></td>
+            <td>Correct range achieved</td>
+        </tr>
+        <tr>
+            <td>Compression Ratio</td>
+            <td>1.70</td>
+            <td><strong>1.70</strong></td>
+            <td>Maintained (as required)</td>
+        </tr>
+        <tr>
+            <td>Power Output</td>
+            <td>136 W</td>
+            <td><strong>255 W</strong></td>
+            <td>+87% increase</td>
+        </tr>
+        <tr>
+            <td>Thermal Efficiency</td>
+            <td>2.8%</td>
+            <td><strong>37.2%</strong></td>
+            <td>Realistic efficiency</td>
+        </tr>
+        <tr>
+            <td>Flywheel Diameter</td>
+            <td>0.843 m</td>
+            <td><strong>0.887 m</strong></td>
+            <td>Slightly larger (due to higher power)</td>
+        </tr>
+        <tr>
+            <td>Hot Volume Range</td>
+            <td>Not physically based</td>
+            <td><strong>32.26 - 110.80 cm³</strong></td>
+            <td>Matches physical geometry</td>
+        </tr>
+        <tr>
+            <td>Cold Volume Range</td>
+            <td>Not physically based</td>
+            <td><strong>35.61 - 163.18 cm³</strong></td>
+            <td>Matches physical geometry</td>
+        </tr>
+    </table>
+
+    <h2>7. Key Takeaways</h2>
+
+    <div class="key-insight">
+        <h3>📊 Engineering Lessons</h3>
+        <ul>
+            <li><strong>Model Physical Reality:</strong> Always base calculations on actual component geometry, not abstract mathematical functions</li>
+            <li><strong>Understand the System:</strong> Beta engines have specific geometric relationships that must be respected</li>
+            <li><strong>Validate Against Theory:</strong> The pressure range should match Schmidt analysis predictions</li>
+            <li><strong>Check Reasonableness:</strong> 2.8% efficiency was a red flag; 37% is realistic for these conditions</li>
+            <li><strong>Volume Conservation:</strong> Total volume must always equal the sum of component volumes</li>
+        </ul>
+    </div>
+
+    <h2>8. Implementation Code Comparison</h2>
+
+    <h3>Critical Function: calculatePistonPosition</h3>
+    <div class="solution">
+        <p>This function, missing in the original, is crucial for proper kinematics:</p>
+    </div>
+
+    <div class="code-block">
+function pistonPosition = calculatePistonPosition(crankAngle, crankLength, rodLength)
+    % Calculate connecting rod angle using sine rule
+    beta = asin(crankLength * sin(crankAngle) / rodLength);
+
+    % Calculate piston position from BDC using cosine rule
+    pistonPosition = rodLength * cos(beta) - crankLength * cos(crankAngle);
+end
+    </div>
+
+    <h3>Volume Conservation Check</h3>
+    <div class="code-block">
+// Both methods check conservation, but Peyton's is naturally satisfied:
+volumeConservationCheck = abs(totalVolume - (compressionVolume + expansionVolume + regeneratorVolume));
+
+// Original: Required artificial balancing
+// Peyton's: Naturally satisfied by geometry
+    </div>
+
+    <h2>9. Visual Representation of the Fix</h2>
+
+    <div class="diagram">
+        <h3>Beta Engine Cross-Section (Simplified)</h3>
+        <div style="background: white; padding: 20px; border-radius: 10px;">
+            <pre style="font-family: monospace; line-height: 1.2;">
+    ┌─────────────────────┐ ← Cylinder Head
+    │                     │
+    │    HOT SPACE        │ ← V_hot = Area × (H_total - h_disp/2 - pos_disp)
+    │                     │
+    ├─────────────────────┤ ← Displacer Top
+    │     DISPLACER       │ ← Height = h_displacer
+    ├─────────────────────┤ ← Displacer Bottom
+    │                     │
+    │    COLD SPACE       │ ← V_cold = Area × (height between components)
+    │                     │
+    ├─────────────────────┤ ← Power Piston Top
+    │   POWER PISTON      │
+    └─────────────────────┘ ← Crank
+
+    Key: Peyton's method calculates the ACTUAL spaces shown above
+         Original method used an arbitrary mathematical split
+            </pre>
+        </div>
+    </div>
+
+    <h2>10. Conclusion</h2>
+
+    <div class="key-insight">
+        <h3>✨ Final Summary</h3>
+        <p>The transformation from the original to Peyton's method represents a shift from <strong>abstract mathematical modeling</strong> to <strong>physics-based engineering calculation</strong>. By modeling the actual geometry of the beta-type Stirling engine—where the displacer physically shuttles gas between hot and cold spaces—Peyton's method achieves:</p>
+        <ul>
+            <li>✅ Correct pressure ranges matching theoretical predictions</li>
+            <li>✅ Realistic power output and efficiency values</li>
+            <li>✅ Proper volume conservation through geometric relationships</li>
+            <li>✅ Accurate flywheel sizing based on real torque variations</li>
+        </ul>
+        <p><strong>The key lesson:</strong> Always model the physical reality of the system, not an abstraction of it.</p>
+    </div>
+
+    <footer style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #ddd; color: #666;">
+        <p>Stirling Engine Analysis - Volume Calculation Method Comparison</p>
+        <p>Generated for ME 5283 Project 1</p>
+    </footer>
+</body>
+</html>

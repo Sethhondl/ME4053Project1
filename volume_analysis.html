@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beta-Type Stirling Engine Volume Calculations - Detailed Analysis</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+        .math-block {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .issue-block {
+            background-color: #fff3cd;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ffc107;
+            border-radius: 5px;
+        }
+        .fix-block {
+            background-color: #d4edda;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+            border-radius: 5px;
+        }
+        .error-block {
+            background-color: #f8d7da;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #dc3545;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background-color: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        .step-explanation {
+            background-color: #e8f4fd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Beta-Type Stirling Engine Volume Calculations - Detailed Mathematical Analysis</h1>
+
+    <h2>1. Overview of Beta-Type Stirling Engine</h2>
+    <p>In a beta-type Stirling engine, both the power piston and displacer operate in the same cylinder. The key characteristics are:</p>
+    <ul>
+        <li>The power piston changes the total gas volume</li>
+        <li>The displacer shuttles gas between hot and cold spaces without changing total volume</li>
+        <li>Total volume depends ONLY on power piston position</li>
+    </ul>
+
+    <h2>2. Crank-Slider Kinematics</h2>
+
+    <h3>2.1 Power Piston Position Calculation</h3>
+    <div class="step-explanation">
+        <strong>Lines 35-38: Power piston position from crank angle</strong>
+    </div>
+
+    <div class="math-block">
+        <p><strong>Step 1: Calculate connecting rod angle</strong></p>
+        \[\beta_{power} = \arcsin\left(\frac{r_{power} \sin(\theta)}{l_{power}}\right)\]
+        <p>where:</p>
+        <ul>
+            <li>\(r_{power}\) = power crank radius = 25 mm</li>
+            <li>\(l_{power}\) = power connecting rod length = 75 mm</li>
+            <li>\(\theta\) = crank angle</li>
+        </ul>
+    </div>
+
+    <div class="code-block">
+        powerConnectingRodAngle = asin(powerCrankRadius * sin(crankAngle) / powerConnectingRodLength);
+    </div>
+
+    <div class="math-block">
+        <p><strong>Step 2: Calculate position from crank center</strong></p>
+        \[s_{crank} = r_{power} \cos(\theta) + l_{power} \cos(\beta_{power})\]
+    </div>
+
+    <div class="code-block">
+        powerPistonPositionFromCrank = powerCrankRadius * cos(crankAngle) + powerConnectingRodLength * cos(powerConnectingRodAngle);
+    </div>
+
+    <div class="math-block">
+        <p><strong>Step 3: Calculate position from TDC (Top Dead Center)</strong></p>
+        \[x_{power} = (r_{power} + l_{power}) - s_{crank}\]
+        <p>This gives distance from TDC, where:</p>
+        <ul>
+            <li>\(x_{power} = 0\) at TDC (minimum volume)</li>
+            <li>\(x_{power} = 2r_{power}\) at BDC (maximum volume)</li>
+        </ul>
+    </div>
+
+    <div class="code-block">
+        powerPistonAtTDC = powerCrankRadius + powerConnectingRodLength;
+        powerPistonPosition = powerPistonAtTDC - powerPistonPositionFromCrank;
+    </div>
+
+    <h3>2.2 Displacer Position Calculation</h3>
+    <div class="step-explanation">
+        <strong>Lines 41-45: Displacer position with phase shift</strong>
+    </div>
+
+    <div class="math-block">
+        <p><strong>Key: Displacer leads power piston by phase angle</strong></p>
+        \[\theta_{disp} = \theta - \phi\]
+        <p>where \(\phi\) = phase shift = 90° (π/2 radians)</p>
+    </div>
+
+    <div class="code-block">
+        displacerCrankAngle = crankAngle - phaseAngle;  // Displacer leads by phase angle
+    </div>
+
+    <div class="math-block">
+        <p><strong>Similar kinematics for displacer:</strong></p>
+        \[\beta_{disp} = \arcsin\left(\frac{r_{disp} \sin(\theta_{disp})}{l_{disp}}\right)\]
+        \[s_{disp} = r_{disp} \cos(\theta_{disp}) + l_{disp} \cos(\beta_{disp})\]
+        \[x_{disp} = (r_{disp} + l_{disp}) - s_{disp}\]
+        <p>where:</p>
+        <ul>
+            <li>\(r_{disp}\) = displacer crank radius = 20 mm</li>
+            <li>\(l_{disp}\) = displacer connecting rod length = 140 mm</li>
+        </ul>
+    </div>
+
+    <h2>3. Volume Calculations</h2>
+
+    <h3>3.1 Total Volume (Lines 56-59)</h3>
+    <div class="math-block">
+        <p><strong>Total gas volume depends ONLY on power piston:</strong></p>
+        \[V_{total} = V_{dead,total} + A_{cyl} \cdot x_{power}\]
+        <p>where:</p>
+        <ul>
+            <li>\(V_{dead,total}\) = total dead volume (hot + cold + regenerator)</li>
+            <li>\(A_{cyl}\) = cylinder cross-sectional area = π(D/2)² = π(50mm/2)²</li>
+            <li>\(x_{power}\) = power piston position from TDC</li>
+        </ul>
+    </div>
+
+    <div class="code-block">
+        totalVolume = params.totalDeadVolume + cylinderCrossSectionalArea * powerPistonPosition;
+    </div>
+
+    <h3>3.2 Working Gas Volume (Line 69)</h3>
+    <div class="math-block">
+        \[V_{working} = V_{total} - V_{dead,total}\]
+    </div>
+
+    <div class="issue-block">
+        <h4>⚠️ ISSUE 1: Displacer Physical Volume Not Accounted</h4>
+        <p>The code comment (lines 71-74) states that displacer volume is NOT subtracted, but physically the displacer does occupy space and reduces available gas volume.</p>
+        <p><strong>Current (Incorrect):</strong></p>
+        \[V_{working} = V_{total} - V_{dead,total}\]
+        <p><strong>Should be:</strong></p>
+        \[V_{working} = V_{total} - V_{dead,total} - V_{displacer}\]
+        <p>where \(V_{displacer}\) = 40 cm³ = 4×10⁻⁵ m³</p>
+    </div>
+
+    <h3>3.3 Volume Distribution Between Hot and Cold Spaces</h3>
+
+    <div class="step-explanation">
+        <strong>Lines 83-95: Volume split factor calculation</strong>
+    </div>
+
+    <div class="math-block">
+        <p><strong>Step 1: Normalize displacer position</strong></p>
+        \[\xi = \frac{x_{disp}}{2r_{disp}}\]
+        <p>where \(\xi\) ranges from 0 (TDC) to 1 (BDC)</p>
+    </div>
+
+    <div class="code-block">
+        normalizedDisplacerPosition = displacerPosition / displacerMaximumStroke;
+    </div>
+
+    <div class="math-block">
+        <p><strong>Step 2: Calculate volume split factor</strong></p>
+        \[f_{split} = \frac{1}{2}[1 - \cos(\pi \xi)]\]
+    </div>
+
+    <div class="code-block">
+        volumeSplitFactor = 0.5 * (1 - cos(pi * normalizedDisplacerPosition));
+    </div>
+
+    <div class="issue-block">
+        <h4>⚠️ ISSUE 2: Volume Split Logic Interpretation</h4>
+        <p>The current implementation has a conceptual issue:</p>
+        <ul>
+            <li>When \(\xi = 0\) (displacer at TDC): \(f_{split} = 0\)</li>
+            <li>When \(\xi = 1\) (displacer at BDC): \(f_{split} = 1\)</li>
+        </ul>
+        <p>Current code interpretation (Lines 100-103):</p>
+        <ul>
+            <li>\(V_{comp} = V_{dead,cold} + V_{working} \cdot f_{split}\)</li>
+            <li>\(V_{exp} = V_{dead,hot} + V_{working} \cdot (1 - f_{split})\)</li>
+        </ul>
+        <p>This means:</p>
+        <ul>
+            <li>At displacer TDC: ALL gas in expansion space (hot)</li>
+            <li>At displacer BDC: ALL gas in compression space (cold)</li>
+        </ul>
+        <p><strong>This is backwards!</strong> When the displacer is at TDC (up), it should push gas into the compression (cold) space below it.</p>
+    </div>
+
+    <div class="fix-block">
+        <h4>✅ CORRECT INTERPRETATION</h4>
+        <p>For a beta-type engine with displacer above power piston:</p>
+        <ul>
+            <li>Displacer at TDC → Gas pushed to cold space below</li>
+            <li>Displacer at BDC → Gas allowed in hot space above</li>
+        </ul>
+        <p><strong>Corrected formulas:</strong></p>
+        \[V_{comp} = V_{dead,cold} + V_{working} \cdot (1 - f_{split})\]
+        \[V_{exp} = V_{dead,hot} + V_{working} \cdot f_{split}\]
+        <p>OR change the split factor definition to:</p>
+        \[f_{split} = \frac{1}{2}[1 + \cos(\pi \xi)]\]
+    </div>
+
+    <h3>3.4 Volume Conservation Check</h3>
+
+    <div class="error-block">
+        <h4>❌ ISSUE 3: No Volume Conservation Verification</h4>
+        <p>The fundamental conservation law must be satisfied:</p>
+        \[V_{total} = V_{comp} + V_{exp} + V_{regen}\]
+        <p>Currently, the code doesn't verify this. With the current implementation:</p>
+        \[V_{comp} + V_{exp} = V_{dead,cold} + V_{dead,hot} + V_{working}\]
+        \[= V_{dead,cold} + V_{dead,hot} + (V_{total} - V_{dead,total})\]
+        \[= V_{dead,cold} + V_{dead,hot} + V_{total} - (V_{dead,cold} + V_{dead,hot} + V_{regen})\]
+        \[= V_{total} - V_{regen}\]
+        <p>Therefore: \(V_{comp} + V_{exp} + V_{regen} = V_{total}\) ✓</p>
+        <p>The math works out, but this should be explicitly verified in the code!</p>
+    </div>
+
+    <h2>4. Summary of Issues and Fixes</h2>
+
+    <table>
+        <tr>
+            <th>Issue</th>
+            <th>Current Implementation</th>
+            <th>Proposed Fix</th>
+            <th>Impact</th>
+        </tr>
+        <tr>
+            <td>Displacer Volume</td>
+            <td>Not subtracted from working volume</td>
+            <td>Subtract V_displacer from working volume</td>
+            <td>Reduces available gas volume by ~4%</td>
+        </tr>
+        <tr>
+            <td>Volume Split Logic</td>
+            <td>Inverted interpretation</td>
+            <td>Swap split factors or change cosine sign</td>
+            <td>Corrects phase relationship</td>
+        </tr>
+        <tr>
+            <td>Conservation Check</td>
+            <td>No explicit verification</td>
+            <td>Add validation: V_total = V_c + V_e + V_r</td>
+            <td>Ensures physical consistency</td>
+        </tr>
+    </table>
+
+    <h2>5. Physical Interpretation</h2>
+
+    <div class="step-explanation">
+        <h3>Correct Beta-Type Engine Operation:</h3>
+        <ol>
+            <li><strong>Compression Phase:</strong> Power piston moves up, total volume decreases</li>
+            <li><strong>Heat Addition:</strong> Displacer moves down, shuttling gas from cold to hot space</li>
+            <li><strong>Expansion Phase:</strong> Power piston moves down, total volume increases</li>
+            <li><strong>Heat Rejection:</strong> Displacer moves up, shuttling gas from hot to cold space</li>
+        </ol>
+
+        <p>The 90° phase advance means the displacer leads the power piston, ensuring gas is in the hot space before expansion and in the cold space before compression.</p>
+    </div>
+
+    <h2>6. Recommended Code Corrections</h2>
+
+    <div class="fix-block">
+        <h4>Key changes needed in calc_volumes.m:</h4>
+        <ol>
+            <li>Account for displacer physical volume:
+                <pre>workingGasVolume = totalVolume - params.totalDeadVolume - params.displacerVolume;</pre>
+            </li>
+            <li>Fix volume split logic (swap the factors):
+                <pre>compressionVolume = params.deadVolumeCold + workingGasVolume .* (1 - volumeSplitFactor);
+expansionVolume = params.deadVolumeHot + workingGasVolume .* volumeSplitFactor;</pre>
+            </li>
+            <li>Add conservation check:
+                <pre>volumeCheck = abs(totalVolume - (compressionVolume + expansionVolume + params.regeneratorVolume));
+if any(volumeCheck > 1e-10)
+    error('Volume conservation violated');
+end</pre>
+            </li>
+        </ol>
+    </div>
+
+</body>
+</html>

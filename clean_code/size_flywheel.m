@@ -1,7 +1,5 @@
 function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total, theta, params)
-    % Calculate required flywheel dimensions based on energy fluctuation
-
-    omega_avg = params.averageAngularVelocity;
+    omega_avg = params.averageRPM * 2 * pi / 60;
     Cs = params.flywheelCoefficientOfFluctuation;
     w = params.flywheelWidth;
     t = params.flywheelRimThickness;
@@ -10,22 +8,18 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
     T_mean = mean(T_total);
     T_deviation = T_total - T_mean;
 
-    % Calculate energy fluctuation
     energy_variation = zeros(size(theta));
     for i = 2:length(theta)
         dtheta = theta(i) - theta(i-1);
-        energy_variation(i) = energy_variation(i-1) + ...
-                              0.5 * (T_deviation(i) + T_deviation(i-1)) * dtheta;
+        energy_variation(i) = energy_variation(i-1) + 0.5 * (T_deviation(i) + T_deviation(i-1)) * dtheta;
     end
 
     E_max = max(energy_variation);
     E_min = min(energy_variation);
     energy_fluctuation = E_max - E_min;
 
-    % Required moment of inertia
     I_required = energy_fluctuation / (Cs * omega_avg^2);
 
-    % Calculate flywheel dimensions
     r_outer_guess = (I_required / (2 * pi * rho * w * t))^(1/3);
 
     for iter = 1:10
@@ -47,13 +41,12 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
     end
 
     r_outer = r_outer_guess;
-    D_outer = 2 * r_outer;
     r_inner = r_outer - t;
-
-    V_flywheel = pi * w * (r_outer^2 - r_inner^2);
-    mass = rho * V_flywheel;
+    V = pi * w * (r_outer^2 - r_inner^2);
+    mass = rho * V;
+    D_outer = 2 * r_outer;
 
     if D_outer > params.maximumFlywheelDiameter
-        warning('Flywheel diameter exceeds maximum limit');
+        warning('Flywheel diameter exceeds practical limit of %.1f m', params.maximumFlywheelDiameter);
     end
 end
