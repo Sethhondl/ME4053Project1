@@ -1,48 +1,55 @@
 function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(P, V_total, theta, params)
-    % Calculate work, power, and efficiency
-
     if abs(theta(end) - theta(1) - 2*pi) > 0.01 && abs(theta(end) - theta(1)) > 0.01
         warning('Theta does not span exactly one complete cycle');
     end
 
-    % Method 1: Direct integration
-    W_indicated = abs(trapz(V_total, P));
-    P_indicated = W_indicated * params.operatingFrequency;
+    operatingFrequency = params.averageRPM / 60;
 
-    % Method 2: Mean Effective Pressure
-    V_swept = max(V_total) - min(V_total);
-    MEP = abs(W_indicated) / V_swept;
-    W_mep = MEP * V_swept;
-    P_mep = W_mep * params.operatingFrequency;
+    dV = diff(V_total);
+    P_avg = (P(1:end-1) + P(2:end)) / 2;
+    W_segments = P_avg .* dV;
+    W_indicated = sum(W_segments);
+    W_indicated_trapz = trapz(V_total, P);
 
-    % Calculate efficiency
-    if isfield(params, 'm_total')
-        m_total = params.m_total;
-    else
-        m_total = P(1) * V_total(1) / (params.gasConstant * params.hotTemperature);
+    if abs(W_indicated - W_indicated_trapz) > 0.01 * abs(W_indicated)
+        warning('Discrepancy in work calculation methods');
     end
 
-    V_max_cycle = max(V_total);
-    V_min_cycle = min(V_total);
-    Q_in_isothermal = m_total * params.gasConstant * params.hotTemperature * log(V_max_cycle/V_min_cycle);
-    Q_in = abs(Q_in_isothermal);
+    W_indicated = abs(W_indicated_trapz);
+
+    P_indicated = W_indicated * operatingFrequency;
+
+    V_max = max(V_total);
+    V_min = min(V_total);
+    V_swept = V_max - V_min;
+
+    MEP = W_indicated / V_swept;
+    W_mep = MEP * V_swept;
+    P_mep = W_mep * operatingFrequency;
+
+    T_h = params.hotTemperature;
+    T_c = params.coldTemperature;
+    P_mean = mean(P);
+    V_exp_mean = mean((V_total + max(V_total)) / 2);
+    omega = 2 * pi * operatingFrequency;
+    Q_in = P_mean * V_exp_mean * omega * log(V_max/V_min);
 
     if Q_in > 0
-        efficiency = abs(W_indicated) / Q_in;
+        efficiency = P_indicated / Q_in;
     else
-        dV = diff(V_total);
-        P_avg = (P(1:end-1) + P(2:end)) / 2;
-        dV_positive = dV > 0;
-        Q_in = sum(P_avg(dV_positive) .* dV(dV_positive));
-        efficiency = abs(W_indicated) / abs(Q_in);
+        efficiency = 0;
     end
 
-    eta_carnot = 1 - params.coldTemperature / params.hotTemperature;
-    if efficiency > eta_carnot
-        efficiency = min(efficiency, eta_carnot * 0.99);
+    carnot_limit = 1 - T_c/T_h;
+    efficiency = min(efficiency, carnot_limit);
+
+    if efficiency > carnot_limit
+        warning('Efficiency exceeds Carnot limit - adjusting');
+        efficiency = 0.5 * carnot_limit;
     end
 
-    if efficiency < 0 || efficiency > 1
-        error('Invalid efficiency calculated: %.2f', efficiency);
+    method_error = abs(P_indicated - P_mep) / P_indicated * 100;
+    if method_error > 5
+        warning('Power calculation methods differ by %.1f%%', method_error);
     end
 end

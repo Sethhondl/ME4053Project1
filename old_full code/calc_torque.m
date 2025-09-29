@@ -44,8 +44,9 @@ function [T_total, T_power, T_disp, T_mean] = calc_torque(P, theta, x_power, x_d
 
             % Torque from power piston using exact crank-slider formula
             % T = F * r * sin(theta) / sqrt(1 - (r/l*sin(theta))^2)
-            % This gives positive torque when force acts downward and crank is rotating
-            T_power(i) = F_power * r_p * sin(theta(i)) / cos_beta_p;
+            % Note: For power stroke (0 to pi), sin(theta) > 0 and F > 0 should give T > 0
+            % The negative sign corrects the convention so positive pressure gives positive torque
+            T_power(i) = -F_power * r_p * sin(theta(i)) / cos_beta_p;
         else
             T_power(i) = 0;  % Invalid position
         end

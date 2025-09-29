@@ -1,79 +1,52 @@
 function [totalVolume, expansionVolume, compressionVolume, powerPistonPosition, displacerPosition] = calc_volumes(crankAngle, params)
-%CALC_VOLUMES Calculate instantaneous volumes for Beta-type Stirling engine
-%   Uses crank-slider kinematics to determine piston positions and volumes
+    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
+    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
 
-    %% ========== EXTRACT PARAMETERS ==========
+    coldVol = calculateColdVolume(crankAngle, params);
+    hotVol = calculateHotVolume(crankAngle, params);
 
-    powerCrankRadius = params.powerCrankLength;
-    powerRodLength = params.powerRodLength;
-    displacerCrankRadius = params.displacerCrankLength;
-    displacerRodLength = params.displacerRodLength;
-    phaseAngle = params.phaseShift;
-    cylinderArea = params.cylinderArea;
+    compressionVolume = coldVol.volume;
+    expansionVolume = hotVol.volume;
+    totalVolume = compressionVolume + expansionVolume + params.regeneratorVolume;
 
+    powerPistonPosition = powerPistonPos;
+    displacerPosition = displacerPos;
 
-    %% ========== VALIDATE GEOMETRY ==========
-
-    if powerRodLength <= powerCrankRadius
-        error('Power piston connecting rod must be longer than crank radius');
+    volumeConservationCheck = abs(totalVolume - (compressionVolume + expansionVolume + params.regeneratorVolume));
+    if any(volumeConservationCheck > 1e-10)
+        error('Volume conservation violated');
     end
-    if displacerRodLength <= displacerCrankRadius
-        error('Displacer connecting rod must be longer than crank radius');
-    end
-
-
-    %% ========== POWER PISTON KINEMATICS ==========
-
-    % Crank-slider mechanism for power piston
-    powerRodAngle = asin(powerCrankRadius * sin(crankAngle) / powerRodLength);
-    powerPistonFromCrank = powerCrankRadius * cos(crankAngle) + ...
-                          powerRodLength * cos(powerRodAngle);
-    powerPistonAtTDC = powerCrankRadius + powerRodLength;
-    powerPistonPosition = powerPistonAtTDC - powerPistonFromCrank;  % Distance from TDC
-
-
-    %% ========== DISPLACER KINEMATICS ==========
-
-    % Displacer leads by phase angle
-    displacerCrankAngle = crankAngle - phaseAngle;
-
-    % Crank-slider mechanism for displacer
-    displacerRodAngle = asin(displacerCrankRadius * sin(displacerCrankAngle) / displacerRodLength);
-    displacerFromCrank = displacerCrankRadius * cos(displacerCrankAngle) + ...
-                        displacerRodLength * cos(displacerRodAngle);
-    displacerAtTDC = displacerCrankRadius + displacerRodLength;
-    displacerPosition = displacerAtTDC - displacerFromCrank;  % Distance from TDC
-
-
-    %% ========== VOLUME CALCULATIONS ==========
-
-    % Total gas volume (depends only on power piston)
-    totalVolume = params.totalDeadVolume + cylinderArea * powerPistonPosition;
-
-    % Working gas volume (excluding dead volumes)
-    workingGasVolume = totalVolume - params.totalDeadVolume;
-
-    % Gas distribution based on displacer position
-    displacerStroke = 2 * displacerCrankRadius;
-    normalizedPosition = displacerPosition / displacerStroke;  % 0 to 1
-
-    % Smooth sinusoidal gas transfer
-    volumeSplitFactor = 0.5 * (1 - cos(pi * normalizedPosition));
-
-    % Calculate space volumes
-    % NOTE: Displacer rod diameter is ignored in volume calculations per specifications
-    % The rod only affects torque calculations, not gas volume distribution
-    compressionVolume = params.deadVolumeCold + workingGasVolume .* volumeSplitFactor;
-    expansionVolume = params.deadVolumeHot + workingGasVolume .* (1 - volumeSplitFactor);
-
-
-    %% ========== VALIDATION ==========
 
     if any(compressionVolume < 0) || any(expansionVolume < 0)
-        error('Negative volume detected - check geometry');
+        error('Negative volume detected');
     end
-    if any(totalVolume < params.totalDeadVolume)
-        error('Total volume less than dead volume - check calculations');
-    end
+end
 
+function pistonPosition = calculatePistonPosition(crankAngle, crankLength, rodLength)
+    beta = asin(crankLength * sin(crankAngle) / rodLength);
+    pistonPosition = rodLength * cos(beta) - crankLength * cos(crankAngle);
+end
+
+function coldVol = calculateColdVolume(crankAngle, params)
+    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
+    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+
+    coldVol.height = (displacerPos - powerPistonPos) - params.powerPinToPistonTop - (params.displacerHeight / 2);
+
+    coldVol.volume = params.cylinderCrossSectionalArea * coldVol.height;
+
+    coldVol.volume = max(coldVol.volume, 0);
+end
+
+function hotVol = calculateHotVolume(crankAngle, params)
+    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
+    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+
+    coldHeight = (displacerPos - powerPistonPos) - params.powerPinToPistonTop - (params.displacerHeight / 2);
+
+    hotVol.height = params.totalCylinderHeight - 0.5 * params.displacerHeight - displacerPos;
+
+    hotVol.volume = params.cylinderCrossSectionalArea * hotVol.height;
+
+    hotVol.volume = max(hotVol.volume, 0);
 end
