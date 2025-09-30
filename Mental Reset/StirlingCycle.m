@@ -4,15 +4,17 @@ clear; clc; close all;
 
 %% Functions
 
-function pistonPosition = calculatePistonPosition(crankAngle, crankLength, rodLength)
+function pistonPosition = calculatePistonPosition(crankAngle, params, isPower)
 %CALCULATEPISTONPOSITION Calculate piston position using slider-crank mechanism
-%   PISTONPOSITION = CALCULATEPISTONPOSITION(CRANKANGLE, CRANKLENGTH, RODLENGTH)
-%   calculates the piston position for a slider-crank mechanism.
+%   PISTONPOSITION = CALCULATEPISTONPOSITION(CRANKANGLE, PARAMS, ISPOWER)
+%   calculates the piston position for either the power piston (ISPOWER=true)
+%   or the displacer (ISPOWER=false). For the displacer, the phase shift is
+%   applied internally.
 %
 %   Inputs:
-%       crankAngle  - Crank angle in radians (0 = BDC, pi = TDC)
-%       crankLength - Crank radius in meters
-%       rodLength   - Connecting rod length in meters
+%       crankAngle - Crank angle in radians (0 = BDC, pi = TDC)
+%       params     - Engine parameters structure
+%       isPower    - Boolean; true for power piston, false for displacer
 %
 %   Output:
 %       pistonPosition - Piston position in meters relative to BDC
@@ -23,13 +25,24 @@ function pistonPosition = calculatePistonPosition(crankAngle, crankLength, rodLe
 %       position based on crank angle, accounting for connecting rod obliquity.
 %
 %   Example:
-%       pos = calculatePistonPosition(pi/2, 0.025, 0.075);
+%       posP = calculatePistonPosition(pi/2, params, true);
+%       posD = calculatePistonPosition(pi/2, params, false);
 %
 %   See also: calculateColdVolume, calculateHotVolume
 
+    if isPower
+        angle = crankAngle;
+        crankLength = params.powerCrankLength;
+        rodLength = params.powerRodLength;
+    else
+        angle = crankAngle + params.phaseShift;
+        crankLength = params.displacerCrankLength;
+        rodLength = params.displacerRodLength;
+    end
+
     % Position is relative to bottom dead center (BDC)
-    beta = asin(crankLength * sin(crankAngle) / rodLength);
-    pistonPosition = rodLength * cos(beta) - crankLength * cos(crankAngle);
+    beta = asin(crankLength * sin(angle) / rodLength);
+    pistonPosition = rodLength * cos(beta) - crankLength * cos(angle);
 end
 
 function coldVol = calculateColdVolume(crankAngle, params)
@@ -61,8 +74,8 @@ function coldVol = calculateColdVolume(crankAngle, params)
 %   See also: calculateHotVolume, calculatePistonPosition
 
     % Calculate piston positions
-    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
-    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+    powerPistonPos = calculatePistonPosition(crankAngle, params, true);
+    displacerPos = calculatePistonPosition(crankAngle, params, false);
     
     % Calculate cold side height
     % Distance between displacer and power piston, minus powerPinToPistonTop, minus half displacer height
@@ -103,11 +116,8 @@ function hotVol = calculateHotVolume(crankAngle, params)
 %   See also: calculateColdVolume, calculatePistonPosition
 
     % Calculate piston positions
-    powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
-    displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
-    
-    % Calculate cold side height (same as in calculateColdVolume)
-    coldHeight = (displacerPos - powerPistonPos) - params.powerPinToPistonTop - (params.displacerHeight / 2);
+    powerPistonPos = calculatePistonPosition(crankAngle, params, true);
+    displacerPos = calculatePistonPosition(crankAngle, params, false);
     
     % Calculate hot side height
     % Hot height = ColdHotHeight - cold height
@@ -441,6 +451,70 @@ end
 
 
 
+function optimization = optimizePhaseShift(theta, params)
+%OPTIMIZEPHASESHIFT Find phase shift that maximizes power output
+%   OPTIMIZATION = OPTIMIZEPHASESHIFT(THETA, PARAMS) scans a range of phase
+%   shifts, computes mean torque and power for each, and returns the phase
+%   shift that maximizes power along with summary arrays.
+%
+%   Inputs:
+%       theta  - Crank angle array in radians
+%       params - Engine parameters structure (uses .averageRPM)
+%
+%   Output (structure):
+%       optimization.phaseGrid        - Array of tested phase shifts (rad)
+%       optimization.meanTorqueGrid   - Mean torque per phase (N·m)
+%       optimization.powerGrid        - Power per phase (W)
+%       optimization.bestPhaseShift   - Phase shift that maximizes power (rad)
+%       optimization.bestPower        - Maximum power (W)
+%       optimization.bestMeanTorque   - Mean torque at best phase (N·m)
+%
+%   Notes:
+%       Power is computed as meanTorque * omega_avg, which is equivalent to
+%       integrating torque over angle and multiplying by rotational speed.
+
+    % Scan range (60° to 120°) with 61 points by default
+    phaseGrid = linspace(deg2rad(60), deg2rad(120), 61);
+
+    omega_avg = params.averageRPM * 2*pi/60;  % rad/s
+
+    meanTorqueGrid = zeros(size(phaseGrid));
+    powerGrid = zeros(size(phaseGrid));
+
+    for k = 1:numel(phaseGrid)
+        params.phaseShift = phaseGrid(k);
+
+        % Compute torque over cycle at this phase
+        T_total = zeros(size(theta));
+        for i = 1:length(theta)
+            tq = calculateTorque(theta(i), params);
+            T_total(i) = tq.total;
+        end
+
+        % Mean torque and power at this phase
+        meanTorque = mean(T_total);
+        powerW = meanTorque * omega_avg;
+
+        meanTorqueGrid(k) = meanTorque;
+        powerGrid(k) = powerW;
+    end
+
+    % Select best phase
+    [bestPower, idx] = max(powerGrid);
+    bestPhaseShift = phaseGrid(idx);
+    bestMeanTorque = meanTorqueGrid(idx);
+
+    % Package results
+    optimization.phaseGrid = phaseGrid;
+    optimization.meanTorqueGrid = meanTorqueGrid;
+    optimization.powerGrid = powerGrid;
+    optimization.bestPhaseShift = bestPhaseShift;
+    optimization.bestPower = bestPower;
+    optimization.bestMeanTorque = bestMeanTorque;
+end
+
+
+
 %% Prescribed Parameters
 
 % ============== GEOMETRY PARAMETERS ==============
@@ -513,8 +587,8 @@ params.cylinderCrossSectionalArea = pi/4*(params.cylinderBore)^2;
 params.displacerHeight = params.displacerVolume / params.cylinderCrossSectionalArea;
 
 % Calculate power piston positions at BDC and TDC
-params.powerPistonPosBDC = calculatePistonPosition(0, params.powerCrankLength, params.powerRodLength);  % 0 radians = BDC
-params.powerPistonPosTDC = calculatePistonPosition(pi, params.powerCrankLength, params.powerRodLength);  % π radians = TDC
+params.powerPistonPosBDC = calculatePistonPosition(0, params, true);  % 0 radians = BDC
+params.powerPistonPosTDC = calculatePistonPosition(pi, params, true);  % π radians = TDC
 
 % Calculate swept volume (volume displaced by power piston)
 params.powerSweptVolume = params.cylinderCrossSectionalArea * (params.powerPistonPosTDC - params.powerPistonPosBDC);
@@ -557,11 +631,10 @@ cycleData.totalTorque = zeros(size(theta));
 cycleData.powerTorque = zeros(size(theta));
 
 % Calculate all data for each crank angle
-fprintf('Calculating cycle data...\n');
 for i = 1:length(theta)
     % Calculate piston positions
-    cycleData.powerPistonPos(i) = calculatePistonPosition(theta(i), params.powerCrankLength, params.powerRodLength);
-    cycleData.displacerPos(i) = calculatePistonPosition(theta(i) + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+    cycleData.powerPistonPos(i) = calculatePistonPosition(theta(i), params, true);
+    cycleData.displacerPos(i) = calculatePistonPosition(theta(i), params, false);
     
     % Calculate volumes
     coldVol = calculateColdVolume(theta(i), params);
@@ -582,7 +655,6 @@ for i = 1:length(theta)
 end
 
 % Calculate flywheel sizing and dynamics
-fprintf('Calculating flywheel size and dynamics...\n');
 flywheel = sizeFlywheel(theta, cycleData.totalTorque, params);
 dynamics = simulateDynamics(theta, cycleData.totalTorque, flywheel.requiredInertia, params);
 
@@ -593,11 +665,11 @@ results.minPressure = min(cycleData.pressure);
 results.meanTorque = mean(cycleData.totalTorque);
 results.meanAngularVelocity = mean(dynamics.rpm);
 
-% Create comprehensive analysis figure
-figure('Name', 'Stirling Engine Cycle Analysis', 'Position', [50, 50, 1800, 1000]);
+% Phase optimization (scan phase shift to maximize power)
+optimization = optimizePhaseShift(theta, params);
 
-% Subplot 1: Piston Positions vs Crank Angle
-subplot(2,3,1);
+% Create figures for analysis
+figure('Name', 'Piston Positions vs Crank Angle', 'Position', [50, 50, 900, 600]);
 plot(theta*180/pi, cycleData.powerPistonPos*1000, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston');
 hold on;
 plot(theta*180/pi, cycleData.displacerPos*1000, 'r-', 'LineWidth', 2, 'DisplayName', 'Displacer');
@@ -607,8 +679,31 @@ title('Piston Positions vs Crank Angle');
 legend('Location', 'best');
 grid on;
 
-% Subplot 2: Volume vs Crank Angle
-subplot(2,3,2);
+% Phase Optimization Results - separate figures
+phaseDeg = optimization.phaseGrid * 180/pi;
+bestPhaseDeg = optimization.bestPhaseShift * 180/pi;
+
+figure('Name', 'Power vs Phase Shift', 'Position', [230, 230, 900, 600]);
+plot(phaseDeg, optimization.powerGrid, 'k-', 'LineWidth', 2, 'DisplayName', 'Power');
+hold on;
+plot(bestPhaseDeg, optimization.bestPower, 'ro', 'MarkerSize', 8, 'LineWidth', 1.5, 'DisplayName', 'Best');
+xlabel('Phase Shift (degrees)');
+ylabel('Power (W)');
+title('Power vs Phase Shift');
+legend('Location', 'best');
+grid on;
+
+figure('Name', 'Mean Torque vs Phase Shift', 'Position', [260, 260, 900, 600]);
+plot(phaseDeg, optimization.meanTorqueGrid, 'b-', 'LineWidth', 2, 'DisplayName', 'Mean Torque');
+hold on;
+plot(bestPhaseDeg, optimization.bestMeanTorque, 'ro', 'MarkerSize', 8, 'LineWidth', 1.5, 'DisplayName', 'Best');
+xlabel('Phase Shift (degrees)');
+ylabel('Mean Torque (N·m)');
+title('Mean Torque vs Phase Shift');
+legend('Location', 'best');
+grid on;
+
+figure('Name', 'Volumes vs Crank Angle', 'Position', [80, 80, 900, 600]);
 plot(theta*180/pi, cycleData.totalVolume*1e6, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Volume');
 hold on;
 plot(theta*180/pi, cycleData.hotVolume*1e6, 'r-', 'LineWidth', 2, 'DisplayName', 'Hot Volume');
@@ -620,8 +715,7 @@ title('Volumes vs Crank Angle');
 legend('Location', 'best');
 grid on;
 
-% Subplot 3: Pressure vs Crank Angle with constant pressure lines
-subplot(2,3,3);
+figure('Name', 'Pressure vs Crank Angle', 'Position', [110, 110, 900, 600]);
 plot(theta*180/pi, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Instantaneous Pressure');
 hold on;
 plot(theta*180/pi, results.meanPressure/1000*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
@@ -633,23 +727,25 @@ title('Pressure vs Crank Angle');
 legend('Location', 'best');
 grid on;
 
-% Subplot 4: P-V Diagram with constant pressure/temperature lines
-subplot(2,3,4);
-plot(cycleData.totalVolume*1e6, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Cycle');
+% Compute specific volume (total volume per total mass)
+m_total_system = calculateSchmidtAnalysis(0, params).totalMass;  % kg (constant over cycle)
+specificVolume = cycleData.totalVolume / m_total_system;          % m^3/kg
+
+figure('Name', 'P-v Diagram (Schmidt Analysis)', 'Position', [140, 140, 900, 600]);
+plot(specificVolume*1e6, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Cycle');
 hold on;
 % Add constant pressure lines
-plot([min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6], [results.meanPressure/1000, results.meanPressure/1000], 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
-plot([min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6], [results.maxPressure/1000, results.maxPressure/1000], 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
-plot([min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6], [results.minPressure/1000, results.minPressure/1000], 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
-xlabel('Total Volume (cm³)');
+plot([min(specificVolume)*1e6, max(specificVolume)*1e6], [results.meanPressure/1000, results.meanPressure/1000], 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
+plot([min(specificVolume)*1e6, max(specificVolume)*1e6], [results.maxPressure/1000, results.maxPressure/1000], 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
+plot([min(specificVolume)*1e6, max(specificVolume)*1e6], [results.minPressure/1000, results.minPressure/1000], 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
+xlabel('Specific Volume (cm^3/kg)');
 ylabel('Pressure (kPa)');
-title('P-V Diagram (Schmidt Analysis)');
+title('P-v Diagram (Schmidt Analysis)');
 legend('Location', 'best');
 grid on;
 axis tight;
 
-% Subplot 5: Torque vs Crank Angle with average
-subplot(2,3,5);
+figure('Name', 'Torque vs Crank Angle', 'Position', [170, 170, 900, 600]);
 plot(theta*180/pi, cycleData.totalTorque, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Torque');
 hold on;
 plot(theta*180/pi, cycleData.powerTorque, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston Torque');
@@ -660,8 +756,7 @@ title('Torque vs Crank Angle');
 legend('Location', 'best');
 grid on;
 
-% Subplot 6: Angular Velocity vs Crank Angle with average
-subplot(2,3,6);
+figure('Name', 'Angular Velocity vs Crank Angle', 'Position', [200, 200, 900, 600]);
 plot(theta*180/pi, dynamics.rpm, 'k-', 'LineWidth', 2, 'DisplayName', 'Angular Velocity');
 hold on;
 plot(theta*180/pi, results.meanAngularVelocity*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Velocity');
@@ -736,6 +831,11 @@ fprintf('  Flywheel Effectiveness: %.1f%% (target Cs: %.4f, actual Cs: %.4f)\n',
         params.flywheelCoefficientOfFluctuation, dynamics.coefficientOfFluctuation);
 fprintf('  Cycle Completeness: %.1f%% (pressure returns to within 1%% of start)\n', ...
         (1 - abs(cycleData.pressure(end) - cycleData.pressure(1))/cycleData.pressure(1))*100);
+
+fprintf('\nPhase Optimization:\n');
+fprintf('  Best Phase Shift: %.1f degrees\n', optimization.bestPhaseShift*180/pi);
+fprintf('  Max Power: %.2f W\n', optimization.bestPower);
+fprintf('  Mean Torque at Best Phase: %.3f N·m\n', optimization.bestMeanTorque);
 
 fprintf('\n===============================================\n');
 fprintf('\n===============================================\n');
