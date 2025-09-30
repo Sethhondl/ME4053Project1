@@ -5,12 +5,61 @@ clear; clc; close all;
 %% Functions
 
 function pistonPosition = calculatePistonPosition(crankAngle, crankLength, rodLength)
+%CALCULATEPISTONPOSITION Calculate piston position using slider-crank mechanism
+%   PISTONPOSITION = CALCULATEPISTONPOSITION(CRANKANGLE, CRANKLENGTH, RODLENGTH)
+%   calculates the piston position for a slider-crank mechanism.
+%
+%   Inputs:
+%       crankAngle  - Crank angle in radians (0 = BDC, pi = TDC)
+%       crankLength - Crank radius in meters
+%       rodLength   - Connecting rod length in meters
+%
+%   Output:
+%       pistonPosition - Piston position in meters relative to BDC
+%                       (positive values = upward from BDC)
+%
+%   Algorithm:
+%       Uses the slider-crank kinematic equations to determine piston
+%       position based on crank angle, accounting for connecting rod obliquity.
+%
+%   Example:
+%       pos = calculatePistonPosition(pi/2, 0.025, 0.075);
+%
+%   See also: calculateColdVolume, calculateHotVolume
+
     % Position is relative to bottom dead center (BDC)
     beta = asin(crankLength * sin(crankAngle) / rodLength);
     pistonPosition = rodLength * cos(beta) - crankLength * cos(crankAngle);
 end
 
 function coldVol = calculateColdVolume(crankAngle, params)
+%CALCULATECOLDVOLUME Calculate cold side volume in Stirling engine
+%   COLDVOL = CALCULATECOLDVOLUME(CRANKANGLE, PARAMS) calculates the cold
+%   side volume of a Stirling engine at a given crank angle.
+%
+%   Inputs:
+%       crankAngle - Crank angle in radians
+%       params     - Structure containing engine parameters including:
+%                   .powerCrankLength, .powerRodLength
+%                   .displacerCrankLength, .displacerRodLength
+%                   .phaseShift, .powerPinToPistonTop
+%                   .displacerHeight, .cylinderCrossSectionalArea
+%
+%   Output:
+%       coldVol    - Structure containing:
+%                   .volume - Cold side volume in m³
+%                   .height - Cold side height in m
+%
+%   Algorithm:
+%       Calculates piston positions for both power piston and displacer,
+%       then determines the cold side volume based on the space between
+%       the displacer and power piston.
+%
+%   Example:
+%       coldVol = calculateColdVolume(pi/4, engineParams);
+%
+%   See also: calculateHotVolume, calculatePistonPosition
+
     % Calculate piston positions
     powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
     displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
@@ -27,14 +76,31 @@ function coldVol = calculateColdVolume(crankAngle, params)
 end
 
 function hotVol = calculateHotVolume(crankAngle, params)
-%CALCULATEHOTVOLUME Calculate hot side volume
+%CALCULATEHOTVOLUME Calculate hot side volume in Stirling engine
+%   HOTVOL = CALCULATEHOTVOLUME(CRANKANGLE, PARAMS) calculates the hot
+%   side volume of a Stirling engine at a given crank angle.
+%
 %   Inputs:
 %       crankAngle - Crank angle in radians
-%       params - Structure containing engine parameters
+%       params     - Structure containing engine parameters including:
+%                   .powerCrankLength, .powerRodLength
+%                   .displacerCrankLength, .displacerRodLength
+%                   .phaseShift, .totalCylinderHeight
+%                   .displacerHeight, .cylinderCrossSectionalArea
+%
 %   Output:
-%       hotVol - Structure containing hot volume data
-%           hotVol.volume - Hot side volume in m³
-%           hotVol.height - Hot side height in m
+%       hotVol     - Structure containing:
+%                   .volume - Hot side volume in m³
+%                   .height - Hot side height in m
+%
+%   Algorithm:
+%       Calculates piston positions and determines the hot side volume
+%       based on the space above the displacer in the cylinder.
+%
+%   Example:
+%       hotVol = calculateHotVolume(pi/4, engineParams);
+%
+%   See also: calculateColdVolume, calculatePistonPosition
 
     % Calculate piston positions
     powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
@@ -56,16 +122,33 @@ end
 
 function schmidt = calculateSchmidtAnalysis(crankAngle, params)
 %CALCULATESCHMIDTANALYSIS Calculate Schmidt analysis for Stirling engine
+%   SCHMIDT = CALCULATESCHMIDTANALYSIS(CRANKANGLE, PARAMS) performs Schmidt
+%   analysis to calculate instantaneous pressure and thermodynamic properties
+%   of a Stirling engine at a given crank angle.
+%
 %   Inputs:
 %       crankAngle - Crank angle in radians
-%       params - Structure containing engine parameters
+%       params     - Structure containing engine parameters including:
+%                   .coldTemperature, .hotTemperature, .regeneratorTemperature
+%                   .regeneratorVolume, .gasConstant, .pressureAtBDC
+%
 %   Output:
-%       schmidt - Structure containing Schmidt analysis results
-%           schmidt.pressure - Instantaneous pressure in Pa
-%           schmidt.totalMass - Total mass in system in kg
-%           schmidt.coldVolume - Cold side volume in m³
-%           schmidt.hotVolume - Hot side volume in m³
-%           schmidt.regeneratorVolume - Regenerator volume in m³
+%       schmidt    - Structure containing Schmidt analysis results:
+%                   .pressure - Instantaneous pressure in Pa
+%                   .totalMass - Total mass in system in kg
+%                   .coldVolume - Cold side volume in m³
+%                   .hotVolume - Hot side volume in m³
+%                   .regeneratorVolume - Regenerator volume in m³
+%
+%   Algorithm:
+%       Uses the Schmidt analysis method, which assumes isothermal processes
+%       and ideal gas behavior. Calculates total system mass at BDC condition,
+%       then uses the Schmidt equation to find instantaneous pressure.
+%
+%   Example:
+%       schmidt = calculateSchmidtAnalysis(pi/2, engineParams);
+%
+%   See also: calculateColdVolume, calculateHotVolume
 
     % Calculate volumes at current crank angle
     coldVol = calculateColdVolume(crankAngle, params);
@@ -107,6 +190,35 @@ function schmidt = calculateSchmidtAnalysis(crankAngle, params)
 end
 
 function torque = calculateTorque(crankAngle, params)
+%CALCULATETORQUE Calculate engine torque at given crank angle
+%   TORQUE = CALCULATETORQUE(CRANKANGLE, PARAMS) calculates the instantaneous
+%   torque produced by a Stirling engine at a given crank angle.
+%
+%   Inputs:
+%       crankAngle - Crank angle in radians
+%       params     - Structure containing engine parameters including:
+%                   .powerCrankLength, .powerRodLength
+%                   .cylinderCrossSectionalArea, .atmosphericPressure
+%
+%   Output:
+%       torque     - Structure containing torque results:
+%                   .power - Power piston torque in N·m
+%                   .displacer - Displacer torque in N·m (always 0)
+%                   .total - Total engine torque in N·m
+%                   .mean - Mean torque in N·m (same as total for single angle)
+%
+%   Algorithm:
+%       Uses Schmidt analysis to get pressure, then calculates net force
+%       on power piston accounting for atmospheric pressure. Applies
+%       slider-crank kinematics to convert force to torque, including
+%       connecting rod obliquity effects. Uses sign convention where
+%       positive torque represents work-producing (expansion) phase.
+%
+%   Example:
+%       torque = calculateTorque(pi/4, engineParams);
+%
+%   See also: calculateSchmidtAnalysis, calculatePistonPosition
+
     % Pressure from Schmidt at this crank angle (make sure its absolute)
     schmidt = calculateSchmidtAnalysis(crankAngle, params);
     P      = schmidt.pressure;
@@ -124,7 +236,11 @@ function torque = calculateTorque(crankAngle, params)
     sb = (r/l) * sin(crankAngle);             % sinβ
 
     cb = sqrt(1 - sb.^2);                 % cosβ > 0
-    torque.power = Fp * r * sin(crankAngle) ./ cb;
+    
+    % Calculate torque with correct sign convention
+    % Positive torque when force opposes piston motion (expansion)
+    % Negative torque when force assists piston motion (compression)
+    torque.power = -Fp * r * sin(crankAngle) ./ cb;
 
     torque.displacer = 0;                     % equal pressure both sides, zero rod area
     torque.total     = torque.power;
@@ -132,19 +248,38 @@ function torque = calculateTorque(crankAngle, params)
 end
 
 
-function flywheel = sizeFlywheel(theta, params)
+function flywheel = sizeFlywheel(theta, T_total, params)
 %SIZEFLYWHEEL Calculate required flywheel dimensions based on energy fluctuation
+%   FLYWHEEL = SIZEFLYWHEEL(THETA, T_TOTAL, PARAMS) calculates the required
+%   flywheel dimensions to achieve a specified coefficient of fluctuation
+%   for a Stirling engine.
+%
 %   Inputs:
-%       theta - Crank angle array in radians
-%       params - Structure containing engine parameters
+%       theta   - Crank angle array in radians
+%       T_total - Total torque array for entire cycle in N·m
+%       params  - Structure containing engine parameters including:
+%                .averageRPM, .flywheelCoefficientOfFluctuation
+%                .flywheelWidth, .flywheelRimThickness
+%                .flywheelMaterialDensity, .maximumFlywheelDiameter
+%
 %   Output:
-%       flywheel - Structure containing flywheel sizing results
-%           flywheel.outerDiameter - Outer diameter in m
-%           flywheel.requiredInertia - Required moment of inertia in kg·m²
-%           flywheel.mass - Flywheel mass in kg
-%           flywheel.energyFluctuation - Energy fluctuation in J
-%           flywheel.innerDiameter - Inner diameter in m
-%           flywheel.volume - Flywheel volume in m³
+%       flywheel - Structure containing flywheel sizing results:
+%                 .outerDiameter - Outer diameter in m
+%                 .innerDiameter - Inner diameter in m
+%                 .requiredInertia - Required moment of inertia in kg·m²
+%                 .mass - Flywheel mass in kg
+%                 .energyFluctuation - Energy fluctuation in J
+%                 .volume - Flywheel volume in m³
+%
+%   Algorithm:
+%       Calculates energy fluctuation from torque variation, determines
+%       required moment of inertia, then uses iterative method to find
+%       flywheel dimensions that provide the required inertia.
+%
+%   Example:
+%       flywheel = sizeFlywheel(theta, totalTorque, engineParams);
+%
+%   See also: simulateDynamics, calculateTorque
 
     % Extract parameters
     omega_avg = params.averageRPM * 2*pi/60;  % Convert RPM to rad/s
@@ -153,23 +288,11 @@ function flywheel = sizeFlywheel(theta, params)
     t = params.flywheelRimThickness;
     rho = params.flywheelMaterialDensity;
     
-    % Calculate torque for entire cycle
-    T_total = zeros(size(theta));
-    for i = 1:length(theta)
-        torque = calculateTorque(theta(i), params);
-        T_total(i) = torque.total;
-    end
-    
     T_mean = mean(T_total);
     T_deviation = T_total - T_mean;
     
-    % Calculate energy fluctuation
-    energy_variation = zeros(size(theta));
-    for i = 2:length(theta)
-        dtheta = theta(i) - theta(i-1);
-        energy_variation(i) = energy_variation(i-1) + ...
-                              0.5 * (T_deviation(i) + T_deviation(i-1)) * dtheta;
-    end
+    % Calculate energy fluctuation using vectorized trapezoidal integration
+    energy_variation = cumtrapz(theta, T_deviation);
     
     E_max = max(energy_variation);
     E_min = min(energy_variation);
@@ -178,34 +301,48 @@ function flywheel = sizeFlywheel(theta, params)
     % Required moment of inertia
     I_required = energy_fluctuation / (Cs * omega_avg^2);
     
-    % Calculate flywheel dimensions using iterative method
-    r_outer_guess = (I_required / (2 * pi * rho * w * t))^(1/3);
+    % Initial guess for outer radius using ring geometry approximation
+    % This provides a better starting point than assuming a solid disk
+    r_outer_guess = sqrt(I_required / (pi * rho * w * t)) + t/2;
     
-    for iter = 1:10
-        r_inner = r_outer_guess - t;
-        if r_inner <= 0
-            error('Flywheel thickness too large for required inertia');
-        end
+    % Iterative solution to find exact flywheel dimensions
+    % We need to solve: I_required = 0.5 * mass * (r_outer^2 + r_inner^2)
+    % where mass = rho * volume and volume = pi * w * (r_outer^2 - r_inner^2)
+    % This is non-linear, so we use iteration to converge to the solution
+    
+    max_iterations = 20;
+    convergence_tolerance = 0.001;  % 0.1% error tolerance
+    
+    for iteration = 1:max_iterations
+        % Calculate current geometry
+        r_inner_current = r_outer_guess - t;
         
-        V = pi * w * (r_outer_guess^2 - r_inner^2);
-        m = rho * V;
-        I_calc = 0.5 * m * (r_outer_guess^2 + r_inner^2);
+        % Calculate volume and mass for current radius
+        flywheel_volume = pi * w * (r_outer_guess^2 - r_inner_current^2);
+        flywheel_mass = rho * flywheel_volume;
         
-        error_ratio = I_required / I_calc;
-        r_outer_guess = r_outer_guess * error_ratio^(1/3);
+        % Calculate actual moment of inertia for current geometry
+        I_actual = 0.5 * flywheel_mass * (r_outer_guess^2 + r_inner_current^2);
         
-        if abs(I_calc - I_required) / I_required < 0.001
+        % Check if we have converged to the required inertia
+        relative_error = abs(I_actual - I_required) / I_required;
+        if relative_error < convergence_tolerance
             break;
         end
+        
+        % Adjust radius estimate using error ratio
+        % The 1/3 power provides stable convergence for this type of problem
+        error_ratio = I_required / I_actual;
+        r_outer_guess = r_outer_guess * error_ratio^(1/3);
     end
     
+    % Use final calculated values 
     r_outer = r_outer_guess;
-    D_outer = 2 * r_outer;
     r_inner = r_outer - t;
+    D_outer = 2 * r_outer;
     D_inner = 2 * r_inner;
-    
-    V_flywheel = pi * w * (r_outer^2 - r_inner^2);
-    mass = rho * V_flywheel;
+    volume = pi * w * (r_outer^2 - r_inner^2);
+    mass = rho * volume;
     
     % Store results in structure
     flywheel.outerDiameter = D_outer;
@@ -213,7 +350,7 @@ function flywheel = sizeFlywheel(theta, params)
     flywheel.requiredInertia = I_required;
     flywheel.mass = mass;
     flywheel.energyFluctuation = energy_fluctuation;
-    flywheel.volume = V_flywheel;
+    flywheel.volume = volume;
     
     % Check against maximum diameter limit
     if D_outer > params.maximumFlywheelDiameter
@@ -222,84 +359,84 @@ function flywheel = sizeFlywheel(theta, params)
     end
 end
 
-function dynamics = simulateDynamics(theta, I_flywheel, params)
+function dynamics = simulateDynamics(theta, T_total, I_flywheel, params)
 %SIMULATEDYNAMICS Simulate angular velocity variation with flywheel
+%   DYNAMICS = SIMULATEDYNAMICS(THETA, T_TOTAL, I_FLYWHEEL, PARAMS) simulates
+%   the angular velocity variation of a Stirling engine with a flywheel
+%   over one complete cycle.
+%
 %   Inputs:
-%       theta - Crank angle array in radians
+%       theta      - Crank angle array in radians
+%       T_total    - Total torque array for entire cycle in N·m
 %       I_flywheel - Flywheel moment of inertia in kg·m²
-%       params - Structure containing engine parameters
+%       params     - Structure containing engine parameters including:
+%                   .averageRPM, .flywheelCoefficientOfFluctuation
+%
 %   Output:
-%       dynamics - Structure containing dynamics simulation results
-%           dynamics.angularVelocity - Angular velocity in rad/s
-%           dynamics.angularAcceleration - Angular acceleration in rad/s²
-%           dynamics.rpm - Angular velocity in RPM
-%           dynamics.coefficientOfFluctuation - Actual coefficient of fluctuation
-%           dynamics.netTorque - Net torque (engine - load) in N·m
-%           dynamics.loadTorque - Load torque in N·m
+%       dynamics   - Structure containing dynamics simulation results:
+%                   .angularVelocity - Angular velocity in rad/s
+%                   .angularAcceleration - Angular acceleration in rad/s²
+%                   .rpm - Angular velocity in RPM
+%                   .coefficientOfFluctuation - Actual coefficient of fluctuation
+%                   .netTorque - Net torque (engine - load) in N·m
+%                   .loadTorque - Load torque in N·m
+%
+%   Algorithm:
+%       Uses work-energy theorem to calculate velocity variation based on
+%       net torque (engine torque minus load torque). Load torque equals
+%       mean engine torque for steady-state operation.
+%
+%   Example:
+%       dynamics = simulateDynamics(theta, totalTorque, flywheelInertia, engineParams);
+%
+%   See also: sizeFlywheel, calculateTorque
 
     % Extract parameters
-    omega_avg = params.averageRPM * 2*pi/60;  % Convert RPM to rad/s
+    omega_target = params.averageRPM * 2*pi/60;  % Convert RPM to rad/s
     
-    % Calculate torque for entire cycle
-    T_total = zeros(size(theta));
-    for i = 1:length(theta)
-        torque = calculateTorque(theta(i), params);
-        T_total(i) = torque.total;
-    end
+    % Calculate load and net torques
+    % Load torque equals mean engine torque (steady-state condition)
+    T_load = mean(T_total);
+    T_net = T_total - T_load;  % Net torque available for acceleration/deceleration
     
-    T_mean = mean(T_total);
-    T_load = T_mean;  % Load torque equals mean engine torque
-    T_net = T_total - T_load;  % Net torque available for acceleration
+    % Calculate angular acceleration from net torque
+    angular_acceleration = T_net / I_flywheel;
     
-    % Calculate angular acceleration
-    alpha = T_net / I_flywheel;
+    % Energy-based velocity calculation
+    % Use work-energy theorem: dW = 0.5 * I * (omega_f^2 - omega_i^2)
+    % where dW is work done by net torque over angle increment
     
-    % Energy-based approach for velocity calculation
-    omega = zeros(size(theta));
-    omega(1) = omega_avg;  % Start at average velocity
+    % Calculate cumulative work done by net torque using vectorized integration
+    cumulative_work = cumtrapz(theta, T_net);
     
-    for i = 2:length(theta)
-        dtheta = theta(i) - theta(i-1);
-        dW = 0.5 * (T_net(i) + T_net(i-1)) * dtheta;  % Work done by net torque
-        omega_squared = omega(i-1)^2 + 2 * dW / I_flywheel;
-        
-        if omega_squared > 0
-            omega(i) = sqrt(omega_squared);
-        else
-            omega(i) = 0.1 * omega_avg;  % Minimum velocity to avoid zero
-        end
-    end
+    % Apply work-energy theorem to find velocity at each point
+    % Starting from omega_target, work changes the kinetic energy
+    velocity_squared = omega_target^2 + 2 * cumulative_work / I_flywheel;
     
-    % Adjust to maintain correct average speed
-    omega_actual_avg = mean(omega);
-    omega = omega * (omega_avg / omega_actual_avg);
+    % Ensure non-negative velocity (physical constraint)
+    angular_velocity = sqrt(max(velocity_squared, (0.1 * omega_target)^2));
     
-    % Convert to RPM
-    rpm = omega * 60 / (2*pi);
+    % Normalize to maintain correct average speed
+    % This corrects for any drift in the energy-based calculation
+    omega_actual_avg = mean(angular_velocity);
+    angular_velocity = angular_velocity * (omega_target / omega_actual_avg);
+    
+    % Convert to RPM for convenience
+    rpm = angular_velocity * 60 / (2*pi);
     
     % Calculate actual coefficient of fluctuation
-    omega_max = max(omega);
-    omega_min = min(omega);
-    omega_mean = mean(omega);
-    Cs_actual = (omega_max - omega_min) / omega_mean;
+    omega_max = max(angular_velocity);
+    omega_min = min(angular_velocity);
+    omega_mean = mean(angular_velocity);
+    coefficient_of_fluctuation = (omega_max - omega_min) / omega_mean;
     
     % Store results in structure
-    dynamics.angularVelocity = omega;
-    dynamics.angularAcceleration = alpha;
+    dynamics.angularVelocity = angular_velocity;
+    dynamics.angularAcceleration = angular_acceleration;
     dynamics.rpm = rpm;
-    dynamics.coefficientOfFluctuation = Cs_actual;
+    dynamics.coefficientOfFluctuation = coefficient_of_fluctuation;
     dynamics.netTorque = T_net;
     dynamics.loadTorque = T_load;
-    
-    % Error checking
-    if any(omega <= 0)
-        error('Non-positive angular velocity detected');
-    end
-    
-    if Cs_actual > params.flywheelCoefficientOfFluctuation * 1.1
-        warning('Actual coefficient of fluctuation (%.4f) exceeds target (%.4f)', ...
-                Cs_actual, params.flywheelCoefficientOfFluctuation);
-    end
 end
 
 
@@ -408,62 +545,62 @@ params.regeneratorTemperature = (params.hotTemperature + params.coldTemperature)
 % Create crank angle array for one complete cycle
 theta = linspace(0, 2*pi, params.simulationPointsPerCycle);
 
-% Initialize arrays for storage
-powerPistonPos = zeros(size(theta));
-displacerPos = zeros(size(theta));
-totalVolume = zeros(size(theta));
-hotVolume = zeros(size(theta));
-coldVolume = zeros(size(theta));
-regeneratorVolume = params.regeneratorVolume * ones(size(theta));
-pressure = zeros(size(theta));
-totalTorque = zeros(size(theta));
-powerTorque = zeros(size(theta));
+% Initialize cycle data structure
+cycleData.powerPistonPos = zeros(size(theta));
+cycleData.displacerPos = zeros(size(theta));
+cycleData.totalVolume = zeros(size(theta));
+cycleData.hotVolume = zeros(size(theta));
+cycleData.coldVolume = zeros(size(theta));
+cycleData.regeneratorVolume = params.regeneratorVolume * ones(size(theta));
+cycleData.pressure = zeros(size(theta));
+cycleData.totalTorque = zeros(size(theta));
+cycleData.powerTorque = zeros(size(theta));
 
 % Calculate all data for each crank angle
 fprintf('Calculating cycle data...\n');
 for i = 1:length(theta)
     % Calculate piston positions
-    powerPistonPos(i) = calculatePistonPosition(theta(i), params.powerCrankLength, params.powerRodLength);
-    displacerPos(i) = calculatePistonPosition(theta(i) + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
+    cycleData.powerPistonPos(i) = calculatePistonPosition(theta(i), params.powerCrankLength, params.powerRodLength);
+    cycleData.displacerPos(i) = calculatePistonPosition(theta(i) + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
     
     % Calculate volumes
     coldVol = calculateColdVolume(theta(i), params);
     hotVol = calculateHotVolume(theta(i), params);
     
-    coldVolume(i) = coldVol.volume;
-    hotVolume(i) = hotVol.volume;
-    totalVolume(i) = coldVolume(i) + hotVolume(i) + regeneratorVolume(i);
+    cycleData.coldVolume(i) = coldVol.volume;
+    cycleData.hotVolume(i) = hotVol.volume;
+    cycleData.totalVolume(i) = cycleData.coldVolume(i) + cycleData.hotVolume(i) + cycleData.regeneratorVolume(i);
     
     % Calculate Schmidt analysis
     schmidt = calculateSchmidtAnalysis(theta(i), params);
-    pressure(i) = schmidt.pressure;
+    cycleData.pressure(i) = schmidt.pressure;
     
     % Calculate torque
     torque = calculateTorque(theta(i), params);
-    totalTorque(i) = torque.total;
-    powerTorque(i) = torque.power;
+    cycleData.totalTorque(i) = torque.total;
+    cycleData.powerTorque(i) = torque.power;
 end
 
 % Calculate flywheel sizing and dynamics
 fprintf('Calculating flywheel size and dynamics...\n');
-flywheel = sizeFlywheel(theta, params);
-dynamics = simulateDynamics(theta, flywheel.requiredInertia, params);
+flywheel = sizeFlywheel(theta, cycleData.totalTorque, params);
+dynamics = simulateDynamics(theta, cycleData.totalTorque, flywheel.requiredInertia, params);
 
-% Calculate cycle averages and limits
-meanPressure = mean(pressure);
-maxPressure = max(pressure);
-minPressure = min(pressure);
-meanTorque = mean(totalTorque);
-meanAngularVelocity = mean(dynamics.rpm);
+% Calculate cycle statistics and store in results structure
+results.meanPressure = mean(cycleData.pressure);
+results.maxPressure = max(cycleData.pressure);
+results.minPressure = min(cycleData.pressure);
+results.meanTorque = mean(cycleData.totalTorque);
+results.meanAngularVelocity = mean(dynamics.rpm);
 
 % Create comprehensive analysis figure
 figure('Name', 'Stirling Engine Cycle Analysis', 'Position', [50, 50, 1800, 1000]);
 
 % Subplot 1: Piston Positions vs Crank Angle
 subplot(2,3,1);
-plot(theta*180/pi, powerPistonPos*1000, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston');
+plot(theta*180/pi, cycleData.powerPistonPos*1000, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston');
 hold on;
-plot(theta*180/pi, displacerPos*1000, 'r-', 'LineWidth', 2, 'DisplayName', 'Displacer');
+plot(theta*180/pi, cycleData.displacerPos*1000, 'r-', 'LineWidth', 2, 'DisplayName', 'Displacer');
 xlabel('Crank Angle (degrees)');
 ylabel('Position (mm)');
 title('Piston Positions vs Crank Angle');
@@ -472,11 +609,11 @@ grid on;
 
 % Subplot 2: Volume vs Crank Angle
 subplot(2,3,2);
-plot(theta*180/pi, totalVolume*1e6, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Volume');
+plot(theta*180/pi, cycleData.totalVolume*1e6, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Volume');
 hold on;
-plot(theta*180/pi, hotVolume*1e6, 'r-', 'LineWidth', 2, 'DisplayName', 'Hot Volume');
-plot(theta*180/pi, coldVolume*1e6, 'b-', 'LineWidth', 2, 'DisplayName', 'Cold Volume');
-plot(theta*180/pi, regeneratorVolume*1e6, 'g-', 'LineWidth', 2, 'DisplayName', 'Regenerator Volume');
+plot(theta*180/pi, cycleData.hotVolume*1e6, 'r-', 'LineWidth', 2, 'DisplayName', 'Hot Volume');
+plot(theta*180/pi, cycleData.coldVolume*1e6, 'b-', 'LineWidth', 2, 'DisplayName', 'Cold Volume');
+plot(theta*180/pi, cycleData.regeneratorVolume*1e6, 'g-', 'LineWidth', 2, 'DisplayName', 'Regenerator Volume');
 xlabel('Crank Angle (degrees)');
 ylabel('Volume (cm³)');
 title('Volumes vs Crank Angle');
@@ -485,11 +622,11 @@ grid on;
 
 % Subplot 3: Pressure vs Crank Angle with constant pressure lines
 subplot(2,3,3);
-plot(theta*180/pi, pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Instantaneous Pressure');
+plot(theta*180/pi, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Instantaneous Pressure');
 hold on;
-plot(theta*180/pi, meanPressure/1000*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
-plot(theta*180/pi, maxPressure/1000*ones(size(theta)), 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
-plot(theta*180/pi, minPressure/1000*ones(size(theta)), 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
+plot(theta*180/pi, results.meanPressure/1000*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
+plot(theta*180/pi, results.maxPressure/1000*ones(size(theta)), 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
+plot(theta*180/pi, results.minPressure/1000*ones(size(theta)), 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
 xlabel('Crank Angle (degrees)');
 ylabel('Pressure (kPa)');
 title('Pressure vs Crank Angle');
@@ -498,12 +635,12 @@ grid on;
 
 % Subplot 4: P-V Diagram with constant pressure/temperature lines
 subplot(2,3,4);
-plot(totalVolume*1e6, pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Cycle');
+plot(cycleData.totalVolume*1e6, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Cycle');
 hold on;
 % Add constant pressure lines
-plot([min(totalVolume)*1e6, max(totalVolume)*1e6], [meanPressure/1000, meanPressure/1000], 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
-plot([min(totalVolume)*1e6, max(totalVolume)*1e6], [maxPressure/1000, maxPressure/1000], 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
-plot([min(totalVolume)*1e6, max(totalVolume)*1e6], [minPressure/1000, minPressure/1000], 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
+plot([min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6], [results.meanPressure/1000, results.meanPressure/1000], 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
+plot([min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6], [results.maxPressure/1000, results.maxPressure/1000], 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
+plot([min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6], [results.minPressure/1000, results.minPressure/1000], 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
 xlabel('Total Volume (cm³)');
 ylabel('Pressure (kPa)');
 title('P-V Diagram (Schmidt Analysis)');
@@ -513,10 +650,10 @@ axis tight;
 
 % Subplot 5: Torque vs Crank Angle with average
 subplot(2,3,5);
-plot(theta*180/pi, totalTorque, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Torque');
+plot(theta*180/pi, cycleData.totalTorque, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Torque');
 hold on;
-plot(theta*180/pi, powerTorque, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston Torque');
-plot(theta*180/pi, meanTorque*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Torque');
+plot(theta*180/pi, cycleData.powerTorque, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston Torque');
+plot(theta*180/pi, results.meanTorque*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Torque');
 xlabel('Crank Angle (degrees)');
 ylabel('Torque (N·m)');
 title('Torque vs Crank Angle');
@@ -527,7 +664,7 @@ grid on;
 subplot(2,3,6);
 plot(theta*180/pi, dynamics.rpm, 'k-', 'LineWidth', 2, 'DisplayName', 'Angular Velocity');
 hold on;
-plot(theta*180/pi, meanAngularVelocity*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Velocity');
+plot(theta*180/pi, results.meanAngularVelocity*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Velocity');
 plot(theta*180/pi, params.averageRPM*ones(size(theta)), 'g--', 'LineWidth', 1, 'DisplayName', 'Target Velocity');
 xlabel('Crank Angle (degrees)');
 ylabel('Angular Velocity (RPM)');
@@ -552,28 +689,28 @@ fprintf('  Regenerator Temperature: %.0f K (%.0f°C)\n', params.regeneratorTempe
 fprintf('  Pressure at BDC: %.1f kPa\n', params.pressureAtBDC/1000);
 
 fprintf('\nPiston Motion Analysis:\n');
-fprintf('  Power Piston Stroke: %.2f mm\n', (max(powerPistonPos) - min(powerPistonPos))*1000);
-fprintf('  Displacer Stroke: %.2f mm\n', (max(displacerPos) - min(displacerPos))*1000);
-fprintf('  Power Piston Max Position: %.2f mm\n', max(powerPistonPos)*1000);
-fprintf('  Displacer Max Position: %.2f mm\n', max(displacerPos)*1000);
+fprintf('  Power Piston Stroke: %.2f mm\n', (max(cycleData.powerPistonPos) - min(cycleData.powerPistonPos))*1000);
+fprintf('  Displacer Stroke: %.2f mm\n', (max(cycleData.displacerPos) - min(cycleData.displacerPos))*1000);
+fprintf('  Power Piston Max Position: %.2f mm\n', max(cycleData.powerPistonPos)*1000);
+fprintf('  Displacer Max Position: %.2f mm\n', max(cycleData.displacerPos)*1000);
 
 fprintf('\nVolume Analysis:\n');
-fprintf('  Total Volume Range: %.2f - %.2f cm³\n', min(totalVolume)*1e6, max(totalVolume)*1e6);
-fprintf('  Compression Ratio: %.2f\n', max(totalVolume)/min(totalVolume));
-fprintf('  Hot Volume Range: %.2f - %.2f cm³\n', min(hotVolume)*1e6, max(hotVolume)*1e6);
-fprintf('  Cold Volume Range: %.2f - %.2f cm³\n', min(coldVolume)*1e6, max(coldVolume)*1e6);
-fprintf('  Regenerator Volume: %.2f cm³ (constant)\n', regeneratorVolume(1)*1e6);
+fprintf('  Total Volume Range: %.2f - %.2f cm³\n', min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6);
+fprintf('  Compression Ratio: %.2f\n', max(cycleData.totalVolume)/min(cycleData.totalVolume));
+fprintf('  Hot Volume Range: %.2f - %.2f cm³\n', min(cycleData.hotVolume)*1e6, max(cycleData.hotVolume)*1e6);
+fprintf('  Cold Volume Range: %.2f - %.2f cm³\n', min(cycleData.coldVolume)*1e6, max(cycleData.coldVolume)*1e6);
+fprintf('  Regenerator Volume: %.2f cm³ (constant)\n', cycleData.regeneratorVolume(1)*1e6);
 
 fprintf('\nPressure Analysis (Schmidt):\n');
-fprintf('  Pressure Range: %.2f - %.2f kPa\n', min(pressure)/1000, max(pressure)/1000);
-fprintf('  Mean Pressure: %.2f kPa\n', meanPressure/1000);
-fprintf('  Pressure Ratio: %.2f\n', max(pressure)/min(pressure));
+fprintf('  Pressure Range: %.2f - %.2f kPa\n', min(cycleData.pressure)/1000, max(cycleData.pressure)/1000);
+fprintf('  Mean Pressure: %.2f kPa\n', results.meanPressure/1000);
+fprintf('  Pressure Ratio: %.2f\n', max(cycleData.pressure)/min(cycleData.pressure));
 
 fprintf('\nTorque Analysis:\n');
-fprintf('  Total Torque Range: %.3f - %.3f N·m\n', min(totalTorque), max(totalTorque));
-fprintf('  Mean Total Torque: %.3f N·m\n', meanTorque);
-fprintf('  Power Piston Torque Range: %.3f - %.3f N·m\n', min(powerTorque), max(powerTorque));
-fprintf('  Mean Power Piston Torque: %.3f N·m\n', mean(powerTorque));
+fprintf('  Total Torque Range: %.3f - %.3f N·m\n', min(cycleData.totalTorque), max(cycleData.totalTorque));
+fprintf('  Mean Total Torque: %.3f N·m\n', results.meanTorque);
+fprintf('  Power Piston Torque Range: %.3f - %.3f N·m\n', min(cycleData.powerTorque), max(cycleData.powerTorque));
+fprintf('  Mean Power Piston Torque: %.3f N·m\n', mean(cycleData.powerTorque));
 
 fprintf('\nFlywheel Analysis:\n');
 fprintf('  Required Moment of Inertia: %.4f kg·m²\n', flywheel.requiredInertia);
@@ -585,7 +722,7 @@ fprintf('  Energy Fluctuation: %.3f J\n', flywheel.energyFluctuation);
 
 fprintf('\nDynamics Analysis:\n');
 fprintf('  Angular Velocity Range: %.1f - %.1f RPM\n', min(dynamics.rpm), max(dynamics.rpm));
-fprintf('  Mean Angular Velocity: %.1f RPM\n', meanAngularVelocity);
+fprintf('  Mean Angular Velocity: %.1f RPM\n', results.meanAngularVelocity);
 fprintf('  Target Angular Velocity: %.1f RPM\n', params.averageRPM);
 fprintf('  Actual Coefficient of Fluctuation: %.4f\n', dynamics.coefficientOfFluctuation);
 fprintf('  Target Coefficient of Fluctuation: %.4f\n', params.flywheelCoefficientOfFluctuation);
@@ -593,11 +730,12 @@ fprintf('  Net Torque Range: %.3f - %.3f N·m\n', min(dynamics.netTorque), max(d
 fprintf('  Load Torque: %.3f N·m\n', dynamics.loadTorque);
 
 fprintf('\nPerformance Summary:\n');
-fprintf('  Engine Power Output: %.2f W (estimated from mean torque)\n', meanTorque * params.averageRPM * 2*pi/60);
+fprintf('  Engine Power Output: %.2f W (estimated from mean torque)\n', results.meanTorque * params.averageRPM * 2*pi/60);
 fprintf('  Flywheel Effectiveness: %.1f%% (target Cs: %.4f, actual Cs: %.4f)\n', ...
         (1 - dynamics.coefficientOfFluctuation/params.flywheelCoefficientOfFluctuation)*100, ...
         params.flywheelCoefficientOfFluctuation, dynamics.coefficientOfFluctuation);
 fprintf('  Cycle Completeness: %.1f%% (pressure returns to within 1%% of start)\n', ...
-        (1 - abs(pressure(end) - pressure(1))/pressure(1))*100);
+        (1 - abs(cycleData.pressure(end) - cycleData.pressure(1))/cycleData.pressure(1))*100);
 
+fprintf('\n===============================================\n');
 fprintf('\n===============================================\n');

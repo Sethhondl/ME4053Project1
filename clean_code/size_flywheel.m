@@ -38,6 +38,7 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
         if abs(I_calc - I_required) / I_required < 0.001
             break;
         end
+
     end
 
     r_outer = r_outer_guess;
@@ -49,4 +50,5 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
     if D_outer > params.maximumFlywheelDiameter
         warning('Flywheel diameter exceeds practical limit of %.1f m', params.maximumFlywheelDiameter);
     end
+end
 end
