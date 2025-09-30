@@ -1,5 +1,6 @@
 function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(P, V_total, theta, params)
     % CALC_POWER Calculate work and power using two different methods
+    % Per spec.md requirement: "Power output calculations using two different methods"
     %
     % Inputs:
     %   P - pressure array (Pa)
@@ -68,7 +69,7 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     P_mep = W_mep * params.operatingFrequency;
     
     %% Calculate Thermal Efficiency
-    % For isothermal processes (engineering assumption #4):
+    % Per spec.md assumption #4: Isothermal expansion and compression
     % Heat input occurs during isothermal expansion at T_hot
     % Heat rejection occurs during isothermal compression at T_cold
 
@@ -102,8 +103,9 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     % Heat rejected during isothermal compression at T_cold
     Q_out_isothermal = m_total * params.gasConstant * params.coldTemperature * log(V_max_cycle/V_min_cycle);
 
-    % Use isothermal calculation for efficiency (proper for Stirling engine)
+    % Use isothermal calculation for efficiency per spec.md assumptions
     Q_in = abs(Q_in_isothermal);
+
 
     % Thermal efficiency
     if Q_in > 0
@@ -118,7 +120,7 @@ function [W_indicated, P_indicated, W_mep, P_mep, MEP, efficiency] = calc_power(
     eta_carnot = 1 - params.coldTemperature / params.hotTemperature;
     
     % Validate results
-    % Work should now always be positive after taking absolute value
+    % Work is positive for power-producing engine
     
     if efficiency > eta_carnot
         warning('Efficiency exceeds Carnot limit - check calculations');

@@ -1,18 +1,18 @@
 STIRLING ENGINE ANALYSIS SUMMARY
-Generated: 16-Sep-2025 10:34:12
+Generated: 28-Sep-2025 20:20:59
 
 CONFIGURATION:
   Engine Type: Beta-type Stirling
   Working Fluid: Air
   Phase Shift: 90 degrees
-  Compression Ratio: 16.27
+  Compression Ratio: 1.70
 
 FLYWHEEL DESIGN:
-  Outer Diameter: 0.602 m
-  Mass: 55.47 kg
-  Moment of Inertia: 4.4067 kg·m²
+  Outer Diameter: 0.887 m
+  Mass: 25.48 kg
+  Moment of Inertia: 4.4787 kg·m²
 
 PERFORMANCE:
-  Power Output: 2.13 kW
-  Thermal Efficiency: 30.6%
-  Speed Fluctuation (Cs): 0.0382
+  Power Output: 0.26 kW
+  Thermal Efficiency: 37.2%
+  Speed Fluctuation (Cs): 0.0030

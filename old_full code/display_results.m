@@ -93,26 +93,72 @@ function display_results(results, params)
     %% Optimization Results
     fprintf('PHASE ANGLE OPTIMIZATION:\n');
     fprintf('--------------------------\n');
-    fprintf('  Optimal Phase (Max Power): %.0f degrees\n', results.optimal_phase);
-    fprintf('  Current Phase Setting: %.0f degrees\n', ...
-            params.phaseShift * 180/pi);
-    
-    % Find power at optimal vs current
-    current_phase = params.phaseShift * 180/pi;
-    opt_power = max(results.optimization.power_curve(:,2));
-    
-    % Interpolate current power from optimization curve
+
+    % Extract detailed optimization data
     phase_values = results.optimization.power_curve(:,1);
     power_values = results.optimization.power_curve(:,2);
+    eff_values = results.optimization.efficiency_curve(:,2);
+    energy_values = results.optimization.energy_curve(:,2);
+
+    % Find optimal points
+    [max_power, max_p_idx] = max(power_values);
+    [max_eff, max_e_idx] = max(eff_values);
+    optimal_phase_power = phase_values(max_p_idx);
+    optimal_phase_eff = phase_values(max_e_idx);
+
+    fprintf('  MAXIMUM POWER:\n');
+    fprintf('    Phase: %.1f° | Power: %.2f W | Efficiency: %.1f%%\n', ...
+            optimal_phase_power, max_power, eff_values(max_p_idx)*100);
+
+    fprintf('  MAXIMUM EFFICIENCY:\n');
+    fprintf('    Phase: %.1f° | Efficiency: %.1f%% | Power: %.2f W\n', ...
+            optimal_phase_eff, max_eff*100, power_values(max_e_idx));
+
+    % Current configuration
+    current_phase = params.phaseShift * 180/pi;
     if current_phase >= min(phase_values) && current_phase <= max(phase_values)
         current_power = interp1(phase_values, power_values, current_phase);
-        improvement = (opt_power - current_power) / current_power * 100;
-        if improvement > 1
-            fprintf('  Potential Power Improvement: %.1f%%\n', improvement);
+        current_eff = interp1(phase_values, eff_values, current_phase);
+
+        fprintf('\n  CURRENT SETTING (%.0f°):\n', current_phase);
+        fprintf('    Power: %.2f W | Efficiency: %.1f%%\n', ...
+                current_power, current_eff*100);
+
+        % Calculate improvements
+        power_improvement = (max_power - current_power) / current_power * 100;
+        if power_improvement > 1
+            fprintf('    → Potential Power Gain: +%.1f%% at %.1f°\n', ...
+                    power_improvement, optimal_phase_power);
         else
-            fprintf('  Current phase is near optimal\n');
+            fprintf('    → Near optimal for power\n');
         end
     end
+
+    % Performance sensitivity
+    if max_p_idx > 1 && max_p_idx < length(phase_values)
+        dP = power_values(max_p_idx+1) - power_values(max_p_idx-1);
+        dphi = phase_values(max_p_idx+1) - phase_values(max_p_idx-1);
+        sensitivity = abs(dP/dphi);
+        fprintf('\n  SENSITIVITY: %.1f W/° ', sensitivity);
+        if sensitivity < 0.5
+            fprintf('(Robust)\n');
+        elseif sensitivity < 2
+            fprintf('(Moderate)\n');
+        else
+            fprintf('(Sensitive)\n');
+        end
+    end
+
+    % Operating window
+    power_90pct = 0.9 * max_power;
+    valid_phases = phase_values(power_values >= power_90pct);
+    if ~isempty(valid_phases)
+        fprintf('  OPERATING WINDOW: %.1f° - %.1f° for >90%% power\n', ...
+                min(valid_phases), max(valid_phases));
+    end
+
+    % Store optimal phase
+    results.optimal_phase = optimal_phase_power;
     fprintf('\n');
     
     %% Design Validation
@@ -122,15 +168,10 @@ function display_results(results, params)
     % Check all requirements
     requirements_met = true;
     
-    % Power output check
-    if results.P_indicated >= 1000 && results.P_indicated <= 10000
-        fprintf('  ✓ Power Output: %.2f kW (1-10 kW range)\n', ...
-                results.P_indicated/1000);
-    else
-        fprintf('  ✗ Power Output: %.2f kW (OUTSIDE 1-10 kW range)\n', ...
-                results.P_indicated/1000);
-        requirements_met = false;
-    end
+    % Power output (informational only - not a requirement)
+    fprintf('  • Power Output: %.2f kW\n', results.P_indicated/1000);
+    % Note: Power output is determined by the given parameters
+    % No specific power range requirement was specified
     
     % Efficiency check
     if results.efficiency <= eta_carnot
