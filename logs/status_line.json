@@ -120,5 +120,371 @@
       "exceeds_200k_tokens": false
     },
     "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:24.487586",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.05023280000000001,
+        "total_duration_ms": 2769872,
+        "total_api_duration_ms": 23226,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "[Sonnet 4.5] \ud83d\udcad No session data",
+    "error": "Session file .claude/data/sessions/11c51d67-5c9d-448e-b98b-91777abd8fb9.json does not exist"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:24.488618",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.05023280000000001,
+        "total_duration_ms": 2769872,
+        "total_api_duration_ms": 23226,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:29.743365",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.06088495000000001,
+        "total_duration_ms": 2775092,
+        "total_api_duration_ms": 29098,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "[Sonnet 4.5] \ud83d\udcad No session data",
+    "error": "Session file .claude/data/sessions/11c51d67-5c9d-448e-b98b-91777abd8fb9.json does not exist"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:29.745121",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.06088495000000001,
+        "total_duration_ms": 2775092,
+        "total_api_duration_ms": 29098,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:35.230591",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.06088495000000001,
+        "total_duration_ms": 2780612,
+        "total_api_duration_ms": 29098,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "[Sonnet 4.5] \ud83d\udcad No session data",
+    "error": "Session file .claude/data/sessions/11c51d67-5c9d-448e-b98b-91777abd8fb9.json does not exist"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:35.231753",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.06088495000000001,
+        "total_duration_ms": 2780612,
+        "total_api_duration_ms": 29098,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:35.714055",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.07441075000000001,
+        "total_duration_ms": 2781109,
+        "total_api_duration_ms": 32877,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "[Sonnet 4.5] \ud83d\udcad No session data",
+    "error": "Session file .claude/data/sessions/11c51d67-5c9d-448e-b98b-91777abd8fb9.json does not exist"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:35.715558",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.07441075000000001,
+        "total_duration_ms": 2781109,
+        "total_api_duration_ms": 32877,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:40.515844",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.09243595000000002,
+        "total_duration_ms": 2785906,
+        "total_api_duration_ms": 36332,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "[Sonnet 4.5] \ud83d\udcad No session data",
+    "error": "Session file .claude/data/sessions/11c51d67-5c9d-448e-b98b-91777abd8fb9.json does not exist"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:40.517449",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.09243595000000002,
+        "total_duration_ms": 2785906,
+        "total_api_duration_ms": 36332,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:45.162638",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.10761260000000002,
+        "total_duration_ms": 2790558,
+        "total_api_duration_ms": 40533,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "[Sonnet 4.5] \ud83d\udcad No session data",
+    "error": "Session file .claude/data/sessions/11c51d67-5c9d-448e-b98b-91777abd8fb9.json does not exist"
+  },
+  {
+    "timestamp": "2025-09-30T10:09:45.164364",
+    "version": "v3",
+    "input_data": {
+      "session_id": "11c51d67-5c9d-448e-b98b-91777abd8fb9",
+      "transcript_path": "/Users/sethhondl/.claude/projects/-Users-sethhondl-dev-umnClasses-mechanicalEngineeringModeling-Project1/11c51d67-5c9d-448e-b98b-91777abd8fb9.jsonl",
+      "cwd": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+      "model": {
+        "id": "claude-sonnet-4-5-20250929",
+        "display_name": "Sonnet 4.5"
+      },
+      "workspace": {
+        "current_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1",
+        "project_dir": "/Users/sethhondl/dev/umnClasses/mechanicalEngineeringModeling/Project1"
+      },
+      "version": "2.0.1",
+      "output_style": {
+        "name": "default"
+      },
+      "cost": {
+        "total_cost_usd": 0.10761260000000002,
+        "total_duration_ms": 2790558,
+        "total_api_duration_ms": 40533,
+        "total_lines_added": 0,
+        "total_lines_removed": 0
+      },
+      "exceeds_200k_tokens": false
+    },
+    "status_line_output": "\u001b[36m[Sonnet 4.5]\u001b[0m \u001b[90m\ud83d\udcad No session data\u001b[0m"
   }
 ]
