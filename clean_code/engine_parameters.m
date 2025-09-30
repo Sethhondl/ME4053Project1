@@ -1,4 +1,31 @@
 function params = engine_parameters()
+% ENGINE_PARAMETERS - Define Stirling engine configuration parameters
+%
+% Syntax:
+%   params = engine_parameters()
+%
+% Description:
+%   Returns a structure containing all physical and operational parameters
+%   for a beta-type Stirling engine analysis. Parameters include geometry,
+%   operating conditions, material properties, and simulation settings.
+%
+% Outputs:
+%   params - Structure containing engine parameters with fields:
+%            .powerCrankLength    - Power piston crank radius (m)
+%            .powerRodLength      - Power piston connecting rod length (m)
+%            .displacerCrankLength - Displacer crank radius (m)
+%            .cylinderBore        - Cylinder diameter (m)
+%            .phaseShift          - Phase angle between pistons (rad)
+%            .hotTemperature      - Hot space temperature (K)
+%            .coldTemperature     - Cold space temperature (K)
+%            .pressureAtBDC       - Pressure at bottom dead center (Pa)
+%            ... and many more
+%
+% Example:
+%   params = engine_parameters();
+%   fprintf('Bore diameter: %.0f mm\n', params.cylinderBore * 1000);
+%
+% See also: STIRLING_ENGINE_ANALYSIS, CALC_VOLUMES
     params.powerCrankLength = 0.025;
     params.powerRodLength = 0.075;
     params.powerPinToPistonTop = 0.005;
