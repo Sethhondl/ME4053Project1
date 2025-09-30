@@ -116,7 +116,6 @@ function hotVol = calculateHotVolume(crankAngle, params)
 %   See also: calculateColdVolume, calculatePistonPosition
 
     % Calculate piston positions
-    powerPistonPos = calculatePistonPosition(crankAngle, params, true);
     displacerPos = calculatePistonPosition(crankAngle, params, false);
     
     % Calculate hot side height
@@ -320,8 +319,8 @@ function flywheel = sizeFlywheel(theta, T_total, params)
     % where mass = rho * volume and volume = pi * w * (r_outer^2 - r_inner^2)
     % This is non-linear, so we use iteration to converge to the solution
     
-    max_iterations = 20;
-    convergence_tolerance = 0.001;  % 0.1% error tolerance
+    max_iterations = params.flywheelMaxIterations;
+    convergence_tolerance = params.flywheelConvergenceTolerance;  % relative error tolerance
     
     for iteration = 1:max_iterations
         % Calculate current geometry
@@ -453,64 +452,89 @@ end
 
 function optimization = optimizePhaseShift(theta, params)
 %OPTIMIZEPHASESHIFT Find phase shift that maximizes power output
-%   OPTIMIZATION = OPTIMIZEPHASESHIFT(THETA, PARAMS) scans a range of phase
-%   shifts, computes mean torque and power for each, and returns the phase
-%   shift that maximizes power along with summary arrays.
+%   OPTIMIZATION = OPTIMIZEPHASESHIFT(THETA, PARAMS) performs a three-stage
+%   search over phase shift to maximize power. It scans broadly, then narrows
+%   around the best candidate with increasingly fine resolution down to 0.01°.
 %
 %   Inputs:
 %       theta  - Crank angle array in radians
 %       params - Engine parameters structure (uses .averageRPM)
 %
 %   Output (structure):
-%       optimization.phaseGrid        - Array of tested phase shifts (rad)
-%       optimization.meanTorqueGrid   - Mean torque per phase (N·m)
-%       optimization.powerGrid        - Power per phase (W)
-%       optimization.bestPhaseShift   - Phase shift that maximizes power (rad)
-%       optimization.bestPower        - Maximum power (W)
-%       optimization.bestMeanTorque   - Mean torque at best phase (N·m)
+%       optimization.phaseGridCoarse      - Tested coarse grid (rad)
+%       optimization.meanTorqueCoarse     - Mean torque per coarse phase (N·m)
+%       optimization.powerCoarse          - Power per coarse phase (W)
+%       optimization.phaseGridMedium      - Tested medium grid (rad)
+%       optimization.meanTorqueMedium     - Mean torque per medium phase (N·m)
+%       optimization.powerMedium          - Power per medium phase (W)
+%       optimization.phaseGridFine        - Tested fine grid (rad)
+%       optimization.meanTorqueFine       - Mean torque per fine phase (N·m)
+%       optimization.powerFine            - Power per fine phase (W)
+%       optimization.bestPhaseShift       - Best phase (rad, from fine scan)
+%       optimization.bestPower            - Max power (W, from fine scan)
+%       optimization.bestMeanTorque       - Mean torque at best phase (N·m)
 %
 %   Notes:
 %       Power is computed as meanTorque * omega_avg, which is equivalent to
 %       integrating torque over angle and multiplying by rotational speed.
 
-    % Scan range (60° to 120°) with 61 points by default
-    phaseGrid = linspace(deg2rad(60), deg2rad(120), 61);
-
     omega_avg = params.averageRPM * 2*pi/60;  % rad/s
 
-    meanTorqueGrid = zeros(size(phaseGrid));
-    powerGrid = zeros(size(phaseGrid));
+    % ---------- Stage 1: Coarse scan (broad range) ----------
+    phaseGridCoarse = deg2rad(30):deg2rad(2):deg2rad(150); % 30° to 150° in 2° steps
+    [meanTorqueCoarse, powerCoarse] = evaluateGrid(theta, params, phaseGridCoarse, omega_avg);
 
-    for k = 1:numel(phaseGrid)
-        params.phaseShift = phaseGrid(k);
+    [~, idxCoarse] = max(powerCoarse);
+    center1 = phaseGridCoarse(idxCoarse);
 
-        % Compute torque over cycle at this phase
-        T_total = zeros(size(theta));
-        for i = 1:length(theta)
-            tq = calculateTorque(theta(i), params);
-            T_total(i) = tq.total;
-        end
+    % ---------- Stage 2: Medium scan (narrow window) ----------
+    window2 = deg2rad(6);                % ±6° around coarse best
+    step2   = deg2rad(0.1);              % 0.1° resolution
+    phaseGridMedium = (center1 - window2):step2:(center1 + window2);
+    [meanTorqueMedium, powerMedium] = evaluateGrid(theta, params, phaseGridMedium, omega_avg);
 
-        % Mean torque and power at this phase
-        meanTorque = mean(T_total);
-        powerW = meanTorque * omega_avg;
+    [~, idxMedium] = max(powerMedium);
+    center2 = phaseGridMedium(idxMedium);
 
-        meanTorqueGrid(k) = meanTorque;
-        powerGrid(k) = powerW;
-    end
+    % ---------- Stage 3: Fine scan (very narrow, 0.01°) ----------
+    window3 = deg2rad(0.5);              % ±0.5° around medium best
+    step3   = deg2rad(0.01);             % 0.01° resolution
+    phaseGridFine = (center2 - window3):step3:(center2 + window3);
+    [meanTorqueFine, powerFine] = evaluateGrid(theta, params, phaseGridFine, omega_avg);
 
-    % Select best phase
-    [bestPower, idx] = max(powerGrid);
-    bestPhaseShift = phaseGrid(idx);
-    bestMeanTorque = meanTorqueGrid(idx);
+    [bestPower, idxFine] = max(powerFine);
+    bestPhaseShift = phaseGridFine(idxFine);
+    bestMeanTorque = meanTorqueFine(idxFine);
 
     % Package results
-    optimization.phaseGrid = phaseGrid;
-    optimization.meanTorqueGrid = meanTorqueGrid;
-    optimization.powerGrid = powerGrid;
-    optimization.bestPhaseShift = bestPhaseShift;
-    optimization.bestPower = bestPower;
-    optimization.bestMeanTorque = bestMeanTorque;
+    optimization.phaseGridCoarse    = phaseGridCoarse;
+    optimization.meanTorqueCoarse   = meanTorqueCoarse;
+    optimization.powerCoarse        = powerCoarse;
+    optimization.phaseGridMedium    = phaseGridMedium;
+    optimization.meanTorqueMedium   = meanTorqueMedium;
+    optimization.powerMedium        = powerMedium;
+    optimization.phaseGridFine      = phaseGridFine;
+    optimization.meanTorqueFine     = meanTorqueFine;
+    optimization.powerFine          = powerFine;
+    optimization.bestPhaseShift     = bestPhaseShift;
+    optimization.bestPower          = bestPower;
+    optimization.bestMeanTorque     = bestMeanTorque;
+
+    function [meanTorqueArr, powerArr] = evaluateGrid(thetaLoc, paramsLoc, gridRad, omegaAvg)
+        meanTorqueArr = zeros(size(gridRad));
+        powerArr = zeros(size(gridRad));
+        for kk = 1:numel(gridRad)
+            paramsLoc.phaseShift = gridRad(kk);
+            T_total_loc = zeros(size(thetaLoc));
+            for ii = 1:length(thetaLoc)
+                tqLoc = calculateTorque(thetaLoc(ii), paramsLoc);
+                T_total_loc(ii) = tqLoc.total;
+            end
+            mT = mean(T_total_loc);
+            meanTorqueArr(kk) = mT;
+            powerArr(kk) = mT * omegaAvg;
+        end
+    end
 end
 
 
@@ -576,6 +600,8 @@ params.simulationPointsPerCycle = 360;        % Points per cycle
 params.simulationCycles = 3;                  % Number of cycles
 params.simulationTolerance = 1e-6;            % Convergence tolerance
 params.maximumFlywheelDiameter = 2.0;         % m - Maximum allowable flywheel diameter
+params.flywheelMaxIterations = 20;            % Iterations for flywheel sizing
+params.flywheelConvergenceTolerance = 1e-3;   % Relative error tolerance for inertia match
 
 
 %% Assisting Calculations
@@ -679,12 +705,12 @@ title('Piston Positions vs Crank Angle');
 legend('Location', 'best');
 grid on;
 
-% Phase Optimization Results - separate figures
-phaseDeg = optimization.phaseGrid * 180/pi;
+% Phase Optimization Results - separate figures (use fine grid for display)
+phaseDeg = optimization.phaseGridFine * 180/pi;
 bestPhaseDeg = optimization.bestPhaseShift * 180/pi;
 
 figure('Name', 'Power vs Phase Shift', 'Position', [230, 230, 900, 600]);
-plot(phaseDeg, optimization.powerGrid, 'k-', 'LineWidth', 2, 'DisplayName', 'Power');
+plot(phaseDeg, optimization.powerFine, 'k-', 'LineWidth', 2, 'DisplayName', 'Power');
 hold on;
 plot(bestPhaseDeg, optimization.bestPower, 'ro', 'MarkerSize', 8, 'LineWidth', 1.5, 'DisplayName', 'Best');
 xlabel('Phase Shift (degrees)');
@@ -694,7 +720,7 @@ legend('Location', 'best');
 grid on;
 
 figure('Name', 'Mean Torque vs Phase Shift', 'Position', [260, 260, 900, 600]);
-plot(phaseDeg, optimization.meanTorqueGrid, 'b-', 'LineWidth', 2, 'DisplayName', 'Mean Torque');
+plot(phaseDeg, optimization.meanTorqueFine, 'b-', 'LineWidth', 2, 'DisplayName', 'Mean Torque');
 hold on;
 plot(bestPhaseDeg, optimization.bestMeanTorque, 'ro', 'MarkerSize', 8, 'LineWidth', 1.5, 'DisplayName', 'Best');
 xlabel('Phase Shift (degrees)');
