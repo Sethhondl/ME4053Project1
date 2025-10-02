@@ -84,8 +84,7 @@ function coldVol = calculateColdVolume(crankAngle, params)
     % Calculate cold volume
     coldVol.volume = params.cylinderCrossSectionalArea * coldVol.height;
     
-    % Ensure volume is non-negative
-    coldVol.volume = max(coldVol.volume, 0);
+    % No clamping: allow signed volume per instruction
 end
 
 function hotVol = calculateHotVolume(crankAngle, params)
@@ -125,8 +124,7 @@ function hotVol = calculateHotVolume(crankAngle, params)
     % Calculate hot volume
     hotVol.volume = params.cylinderCrossSectionalArea * hotVol.height;
     
-    % Ensure volume is non-negative
-    hotVol.volume = max(hotVol.volume, 0);
+    % No clamping: allow signed volume per instruction
 end
 
 function schmidt = calculateSchmidtAnalysis(crankAngle, params)
@@ -361,11 +359,6 @@ function flywheel = sizeFlywheel(theta, T_total, params)
     flywheel.energyFluctuation = energy_fluctuation;
     flywheel.volume = volume;
     
-    % Check against maximum diameter limit
-    if D_outer > params.maximumFlywheelDiameter
-        warning('Flywheel diameter (%.2f m) exceeds maximum limit (%.2f m)', ...
-                D_outer, params.maximumFlywheelDiameter);
-    end
 end
 
 function dynamics = simulateDynamics(theta, T_total, I_flywheel, params)
@@ -422,8 +415,8 @@ function dynamics = simulateDynamics(theta, T_total, I_flywheel, params)
     % Starting from omega_target, work changes the kinetic energy
     velocity_squared = omega_target^2 + 2 * cumulative_work / I_flywheel;
     
-    % Ensure non-negative velocity (physical constraint)
-    angular_velocity = sqrt(max(velocity_squared, (0.1 * omega_target)^2));
+    % No minimum-speed floor: compute directly from energy balance
+    angular_velocity = sqrt(velocity_squared);
     
     % Normalize to maintain correct average speed
     % This corrects for any drift in the energy-based calculation

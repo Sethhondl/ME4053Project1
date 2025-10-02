@@ -1,0 +1,207 @@
+A Computational Analysis of a Set Parameter Beta-Type Stirling Engine and Flywheel Design Optimization
+——————————————————————————
+ME4051 - 9/20/25 - Thomas Ritten, Sebastian Hondl, and Peyton Lettau - Group 29
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Introduction
+__________________________________________________________________________________
+
+The effectiveness of an energy conversion system is often defined by its losses:  What causes them, how significant they are, and how they can be reduced to improve overall system performance.  For Stirling engines, Beta-type configurations in particular, challenging these losses is a neverending ordeal for all engineers.  These engines provide a straightforward yet effective method of converting heat into mechanical work through a single power piston.
+
+To evaluate their performance, it is essential to examine each phase of the cycle.  Determining how much work is generated in real versus ideal conditions, torque produced and whether it overcomes the reverse cycle, fluctuations in crankshaft velocity, and the phase of the engine where the most effective energy generation takes place, all in relation to the rotational position along the cycle.  Beyond the piston cycle itself, designing a proper flywheel is critical, as it must provide an inertia and size sufficient to maintain as close to the desired rotational velocity as possible without overloading the system.
+
+In this study, a set of parameters was utilized and assessed to measure system performance across these metrics using comprehensive codified analysis.  The goal is to deepen the overall understanding of Stirling engines themselves as well as explore opportunities for improvement to the pre-existing system.
+
+Code Procedure
+__________________________________________________________________________________
+
+A series of functions were developed to help compartmentalize crucial portions of the codified analysis.  First, an engine parameters variable was created using the tabulated values below so they could be used as reference without the need to reinitialize them in each block.
+
+From these, the code is split into 4 referential parts, pertaining to the four critical plots utilized to characterize the engine cycle.  Beyond the listed constants, the single independent variable used in each of these plots, theta (Ө), is characterized by a function 360 points even spaced between 0 and 2pi, characterizing values at each degree.  First, the volume with respect to crank angle is calculated.  One of the most critical parameters derived from the given table below is the cross-sectional area of the piston and displacer.  
+
+With the ideal assumption of equal diameters between the cylinder and power piston / displacer as well as power piston position dictated by the crank and rod angles and lengths, this can be used to calculate all volumes, including the air expansion and compression volumes, from the given equations:
+
+
+
+Component
+Parameter
+Measures
+Units
+Power Piston
+Crank Length
+0.025
+m (meters)
+
+Connecting Rod Length
+0.075
+m
+
+Distance from pin to piston top
+0.005
+m
+Displacer
+Crank length
+0.02
+m
+
+Connecting rod length
+0.14
+m
+
+Displacer volume
+4.00E-05
+m^3
+Cylinder bore
+Cylinder Bore Diameter
+0.05
+m
+Phase shift
+Phase Shift
+pi/2
+radians
+Compression Ratio
+Compression Ratio
+1.7
+
+High Temp
+High Temp
+900
+K (Kelvin)
+Low Temp
+Low Temp
+300
+K
+Gas Pressure at BDC
+Gas Pressure at BDC
+500
+kPa Absolute
+Atm Pressure
+Atm Pressure
+101.3
+kPa Absolute
+Regenerator Dead Volume
+Regenerator Dead Volume
+2.00E-05
+m^3
+Work Fluid
+Work fluid
+Air
+
+Fly Wheel
+Width
+0.025
+m
+
+Diameter
+?
+m
+
+Rim Thickness
+0.05
+m
+
+Material
+304 Stainless Steel
+
+
+Density
+8000
+kg/m^3
+Coefficient of Fluctuation
+Coefficient of Fluctuation
+0.003
+Unitless
+Average Rotational Velocity
+Average Rotational Velocity
+650
+rpm
+Figure 1 - Given Initial Engine Parameters Utilized
+
+Using the above parameters, the volumes for each the expansion and compression volumes based on the displacer and power piston positions are calculated, the displacer using the same diameter calculation with theta offset by 90 degrees per the below schematic:
+
+
+
+
+Where  is the displacer volume divided by area and  is calculated using the following:
+
+
+
+Where  and  are calculated at  respectively.
+
+
+
+Following volume calculations, the temperatures (including regenerator temp as the average between  and ) and volumes are known, along with the pressure at BDC given, allowing Schmidt analysis to be performed to find mass and ultimately, pressure along the distribution with steady state principles (mass conserved):
+
+ and  where 
+
+Work is then calculated by taking the integration of the sum of pressure and differential volume using the function trapz as a summing operation for the full cycle.  Efficiency is calculated with said work, compared to maximum potential work (calculated as the sum of the maximum volume regions at BDC and pressure).
+
+Knowing pressure at each instance, this value can be compared in reference to atmospheric pressure to find absolute pressure, which when multiplied by area provides force.  Total torque is then calculated by using the power piston’s torque contribution alone (as ideally the displacer applies zero torque to the system):
+
+
+With average angular velocity  RPM, the coefficient of fluctuation, width, thickness, and density of the flywheel (assumed 304SS stainless steel) and torque now known, a cumulative differential fit was applied to find the variation of energy throughout the system (between maximum and minimum).  This variation was then divided by  multiplied by the fluctuation coefficient to set a target moment of inertia for the system to achieve.  From this, the actual moment of inertia is calculated iteratively with an radius outer estimate using the two equations:
+
+ and 
+
+Once finished solving iteratively, diameter, inertia, and energy fluctuation are all reported.  Cumulative work is then calculated using the alternative equation, , calculated fully with a cumulative differential fit summed along the torque distribution.  We can then incorporate the impact of this fluctuating torque into the angular velocity and how it changes over the course of the cycle:
+
+
+
+Additionally, measures are taken to ensure that the angular velocity doesn’t fall below a minimum value, using the max function to permit fluctuations as long as they haven’t fallen below 10% of the target average (65 RPM) as a precaution if Ω became too low in an ideal system for the cycle to rebound.
+
+Finally, the phase optimization operates similarly to the fzero function, but analyses an expected interval in steps (first through a coarse region between 60 and 120 degrees with 5 degree steps, then medium of 5 degree intervals with 0.1 degrees steps, then fine region of 0.5 degree intervals with 0.001 degrees steps).  The distribution is then refined using the fine region to produce indexes that plot phase and corresponding energy per cycle.  The initial phase is set to 90 degrees as default between piston and displacer, and the energy generated at both that and the optimal phase is then output.
+
+Schematic
+__________________________________________________________________________________
+
+V_exp
+V_comp
+AB
+A_oA
+A_oA
+Power Piston
+Regenerator
+Displacer
+D_bore
+AC
+Figure 2 - Beta-Type Stirling Engine Cycle Schematic (with optimal phase)
+
+Results
+__________________________________________________________________________________
+
+
+
+Discussion
+__________________________________________________________________________________
+
+
+
+Conclusion
+__________________________________________________________________________________
+
+
+
+Appendices
