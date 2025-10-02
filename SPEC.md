@@ -109,13 +109,13 @@ Design and analyze a properly sized flywheel for a beta-type Stirling engine tha
   - Which requirements were missed and explanation
 
 **Structure:**
-1. Executive Summary
-2. Introduction and Background
-3. Methodology
-4. Analysis and Results
-5. Key Findings
-6. Conclusions and Recommendations
-7. Appendices (if needed)
+
+1. Introduction and Background
+2. Methodology
+3. Analysis and Results
+4. Key Findings
+5. Conclusions and Recommendations
+6. Appendices (if needed)
 
 ## Additional Resources
 

@@ -1,4 +1,31 @@
 function [totalVolume, expansionVolume, compressionVolume, powerPistonPosition, displacerPosition] = calc_volumes(crankAngle, params)
+% CALC_VOLUMES - Calculate instantaneous volumes in beta-type Stirling engine
+%
+% Syntax:
+%   [totalVolume, expansionVolume, compressionVolume, powerPistonPosition, displacerPosition] = calc_volumes(crankAngle, params)
+%
+% Description:
+%   Calculates the instantaneous volumes of hot space, cold space, and total
+%   gas volume based on crank angle and engine geometry. Uses proper beta
+%   engine physical model where displacer shuttles gas between spaces.
+%
+% Inputs:
+%   crankAngle - Crank angle(s) in radians (can be array)
+%   params     - Engine parameters structure from engine_parameters()
+%
+% Outputs:
+%   totalVolume          - Total gas volume (m^3)
+%   expansionVolume      - Hot space volume (m^3)
+%   compressionVolume    - Cold space volume (m^3)
+%   powerPistonPosition  - Power piston position from BDC (m)
+%   displacerPosition    - Displacer position from BDC (m)
+%
+% Example:
+%   params = engine_parameters();
+%   theta = linspace(0, 2*pi, 360);
+%   [V_total, V_hot, V_cold, ~, ~] = calc_volumes(theta, params);
+%
+% See also: ENGINE_PARAMETERS, SCHMIDT_ANALYSIS
     powerPistonPos = calculatePistonPosition(crankAngle, params.powerCrankLength, params.powerRodLength);
     displacerPos = calculatePistonPosition(crankAngle + params.phaseShift, params.displacerCrankLength, params.displacerRodLength);
 
