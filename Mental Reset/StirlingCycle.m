@@ -684,6 +684,21 @@ results.minPressure = min(cycleData.pressure);
 results.meanTorque = mean(cycleData.totalTorque);
 results.meanAngularVelocity = mean(dynamics.rpm);
 
+% Calculate net work per cycle (integral of torque over angle)
+results.netWorkPerCycle = trapz(theta, cycleData.totalTorque);  % J
+
+% Calculate ideal Stirling cycle work for efficiency comparison
+% Ideal Stirling cycle work = m*R*T_h*ln(V_max/V_min) - m*R*T_c*ln(V_max/V_min)
+% = m*R*(T_h - T_c)*ln(V_max/V_min)
+m_total = calculateSchmidtAnalysis(0, params).totalMass;  % Total mass in system
+V_max = max(cycleData.totalVolume);
+V_min = min(cycleData.totalVolume);
+compression_ratio = V_max / V_min;
+results.idealWorkPerCycle = m_total * params.gasConstant * (params.hotTemperature - params.coldTemperature) * log(compression_ratio);
+
+% Calculate cycle efficiency (actual work / ideal work)
+results.cycleEfficiency = (results.netWorkPerCycle / results.idealWorkPerCycle) * 100;
+
 % Phase optimization (scan phase shift to maximize power)
 optimization = optimizePhaseShift(theta, params);
 
@@ -1005,6 +1020,7 @@ fprintf('  Total Torque Range: %.3f - %.3f N·m\n', min(cycleData.totalTorque), 
 fprintf('  Mean Total Torque: %.3f N·m\n', results.meanTorque);
 fprintf('  Power Piston Torque Range: %.3f - %.3f N·m\n', min(cycleData.powerTorque), max(cycleData.powerTorque));
 fprintf('  Mean Power Piston Torque: %.3f N·m\n', mean(cycleData.powerTorque));
+fprintf('  Net Work per Cycle: %.3f J\n', results.netWorkPerCycle);
 
 fprintf('\nFlywheel Analysis:\n');
 fprintf('  Required Moment of Inertia: %.4f kg·m²\n', flywheel.requiredInertia);
@@ -1018,12 +1034,17 @@ fprintf('\nDynamics Analysis:\n');
 fprintf('  Angular Velocity Range: %.1f - %.1f RPM\n', min(dynamics.rpm), max(dynamics.rpm));
 fprintf('  Mean Angular Velocity: %.1f RPM\n', results.meanAngularVelocity);
 fprintf('  Target Angular Velocity: %.1f RPM\n', params.averageRPM);
+fprintf('  Maximum Velocity at: %.1f degrees\n', angle_rpmmax);
+fprintf('  Minimum Velocity at: %.1f degrees\n', angle_rpmmin);
 fprintf('  Actual Coefficient of Fluctuation: %.4f\n', dynamics.coefficientOfFluctuation);
 fprintf('  Target Coefficient of Fluctuation: %.4f\n', params.flywheelCoefficientOfFluctuation);
 fprintf('  Net Torque Range: %.3f - %.3f N·m\n', min(dynamics.netTorque), max(dynamics.netTorque));
 fprintf('  Load Torque: %.3f N·m\n', dynamics.loadTorque);
 
 fprintf('\nPerformance Summary:\n');
+fprintf('  Ideal Work per Cycle: %.3f J\n', results.idealWorkPerCycle);
+fprintf('  Actual Work per Cycle: %.3f J\n', results.netWorkPerCycle);
+fprintf('  Cycle Efficiency: %.1f%%\n', results.cycleEfficiency);
 fprintf('  Engine Power Output: %.2f W (estimated from mean torque)\n', results.meanTorque * params.averageRPM * 2*pi/60);
 fprintf('  Flywheel Effectiveness: %.1f%% (target Cs: %.4f, actual Cs: %.4f)\n', ...
         (1 - dynamics.coefficientOfFluctuation/params.flywheelCoefficientOfFluctuation)*100, ...
@@ -1038,3 +1059,91 @@ fprintf('  Mean Torque at Best Phase: %.3f N·m\n', optimization.bestMeanTorque)
 
 fprintf('\n===============================================\n');
 fprintf('\n===============================================\n');
+
+% Save output to text file
+outputFileName = 'stirling_engine_analysis_results.txt';
+fid = fopen(outputFileName, 'w');
+if fid == -1
+    fprintf('Warning: Could not create output file %s\n', outputFileName);
+else
+    fprintf(fid, '=== STIRLING ENGINE CYCLE ANALYSIS RESULTS ===\n');
+    fprintf(fid, 'Engine Configuration:\n');
+    fprintf(fid, '  Power Piston Crank Length: %.1f mm\n', params.powerCrankLength*1000);
+    fprintf(fid, '  Power Piston Rod Length: %.1f mm\n', params.powerRodLength*1000);
+    fprintf(fid, '  Displacer Crank Length: %.1f mm\n', params.displacerCrankLength*1000);
+    fprintf(fid, '  Displacer Rod Length: %.1f mm\n', params.displacerRodLength*1000);
+    fprintf(fid, '  Phase Shift: %.1f degrees\n', params.phaseShift*180/pi);
+    fprintf(fid, '  Cylinder Bore: %.1f mm\n', params.cylinderBore*1000);
+
+    fprintf(fid, '\nThermodynamic Conditions:\n');
+    fprintf(fid, '  Hot Temperature: %.0f K (%.0f°C)\n', params.hotTemperature, params.hotTemperature-273.15);
+    fprintf(fid, '  Cold Temperature: %.0f K (%.0f°C)\n', params.coldTemperature, params.coldTemperature-273.15);
+    fprintf(fid, '  Regenerator Temperature: %.0f K (%.0f°C)\n', params.regeneratorTemperature, params.regeneratorTemperature-273.15);
+    fprintf(fid, '  Pressure at BDC: %.1f kPa\n', params.pressureAtBDC/1000);
+
+    fprintf(fid, '\nPiston Motion Analysis:\n');
+    fprintf(fid, '  Power Piston Stroke: %.2f mm\n', (max(cycleData.powerPistonPos) - min(cycleData.powerPistonPos))*1000);
+    fprintf(fid, '  Displacer Stroke: %.2f mm\n', (max(cycleData.displacerPos) - min(cycleData.displacerPos))*1000);
+    fprintf(fid, '  Power Piston Max Position: %.2f mm\n', max(cycleData.powerPistonPos)*1000);
+    fprintf(fid, '  Displacer Max Position: %.2f mm\n', max(cycleData.displacerPos)*1000);
+
+    fprintf(fid, '\nVolume Analysis:\n');
+    fprintf(fid, '  Total Volume Range: %.2f - %.2f cm³\n', min(cycleData.totalVolume)*1e6, max(cycleData.totalVolume)*1e6);
+    fprintf(fid, '  Compression Ratio: %.2f\n', max(cycleData.totalVolume)/min(cycleData.totalVolume));
+    fprintf(fid, '  Hot Volume Range: %.2f - %.2f cm³\n', min(cycleData.hotVolume)*1e6, max(cycleData.hotVolume)*1e6);
+    fprintf(fid, '  Cold Volume Range: %.2f - %.2f cm³\n', min(cycleData.coldVolume)*1e6, max(cycleData.coldVolume)*1e6);
+    fprintf(fid, '  Regenerator Volume: %.2f cm³ (constant)\n', cycleData.regeneratorVolume(1)*1e6);
+
+    fprintf(fid, '\nPressure Analysis (Schmidt):\n');
+    fprintf(fid, '  Pressure Range: %.2f - %.2f kPa\n', min(cycleData.pressure)/1000, max(cycleData.pressure)/1000);
+    fprintf(fid, '  Mean Pressure: %.2f kPa\n', results.meanPressure/1000);
+    fprintf(fid, '  Pressure Ratio: %.2f\n', max(cycleData.pressure)/min(cycleData.pressure));
+
+    fprintf(fid, '\nTorque Analysis:\n');
+    fprintf(fid, '  Total Torque Range: %.3f - %.3f N·m\n', min(cycleData.totalTorque), max(cycleData.totalTorque));
+    fprintf(fid, '  Mean Total Torque: %.3f N·m\n', results.meanTorque);
+    fprintf(fid, '  Power Piston Torque Range: %.3f - %.3f N·m\n', min(cycleData.powerTorque), max(cycleData.powerTorque));
+    fprintf(fid, '  Mean Power Piston Torque: %.3f N·m\n', mean(cycleData.powerTorque));
+    fprintf(fid, '  Net Work per Cycle: %.3f J\n', results.netWorkPerCycle);
+
+    fprintf(fid, '\nFlywheel Analysis:\n');
+    fprintf(fid, '  Required Moment of Inertia: %.4f kg·m²\n', flywheel.requiredInertia);
+    fprintf(fid, '  Flywheel Outer Diameter: %.3f m (%.1f mm)\n', flywheel.outerDiameter, flywheel.outerDiameter*1000);
+    fprintf(fid, '  Flywheel Inner Diameter: %.3f m (%.1f mm)\n', flywheel.innerDiameter, flywheel.innerDiameter*1000);
+    fprintf(fid, '  Flywheel Mass: %.2f kg\n', flywheel.mass);
+    fprintf(fid, '  Flywheel Volume: %.6f m³ (%.1f cm³)\n', flywheel.volume, flywheel.volume*1e6);
+    fprintf(fid, '  Energy Fluctuation: %.3f J\n', flywheel.energyFluctuation);
+
+    fprintf(fid, '\nDynamics Analysis:\n');
+    fprintf(fid, '  Angular Velocity Range: %.1f - %.1f RPM\n', min(dynamics.rpm), max(dynamics.rpm));
+    fprintf(fid, '  Mean Angular Velocity: %.1f RPM\n', results.meanAngularVelocity);
+    fprintf(fid, '  Target Angular Velocity: %.1f RPM\n', params.averageRPM);
+    fprintf(fid, '  Maximum Velocity at: %.1f degrees\n', angle_rpmmax);
+    fprintf(fid, '  Minimum Velocity at: %.1f degrees\n', angle_rpmmin);
+    fprintf(fid, '  Actual Coefficient of Fluctuation: %.4f\n', dynamics.coefficientOfFluctuation);
+    fprintf(fid, '  Target Coefficient of Fluctuation: %.4f\n', params.flywheelCoefficientOfFluctuation);
+    fprintf(fid, '  Net Torque Range: %.3f - %.3f N·m\n', min(dynamics.netTorque), max(dynamics.netTorque));
+    fprintf(fid, '  Load Torque: %.3f N·m\n', dynamics.loadTorque);
+
+    fprintf(fid, '\nPerformance Summary:\n');
+    fprintf(fid, '  Ideal Work per Cycle: %.3f J\n', results.idealWorkPerCycle);
+    fprintf(fid, '  Actual Work per Cycle: %.3f J\n', results.netWorkPerCycle);
+    fprintf(fid, '  Cycle Efficiency: %.1f%%\n', results.cycleEfficiency);
+    fprintf(fid, '  Engine Power Output: %.2f W (estimated from mean torque)\n', results.meanTorque * params.averageRPM * 2*pi/60);
+    fprintf(fid, '  Flywheel Effectiveness: %.1f%% (target Cs: %.4f, actual Cs: %.4f)\n', ...
+            (1 - dynamics.coefficientOfFluctuation/params.flywheelCoefficientOfFluctuation)*100, ...
+            params.flywheelCoefficientOfFluctuation, dynamics.coefficientOfFluctuation);
+    fprintf(fid, '  Cycle Completeness: %.1f%% (pressure returns to within 1%% of start)\n', ...
+            (1 - abs(cycleData.pressure(end) - cycleData.pressure(1))/cycleData.pressure(1))*100);
+
+    fprintf(fid, '\nPhase Optimization:\n');
+    fprintf(fid, '  Best Phase Shift: %.1f degrees\n', optimization.bestPhaseShift*180/pi);
+    fprintf(fid, '  Max Power: %.2f W\n', optimization.bestPower);
+    fprintf(fid, '  Mean Torque at Best Phase: %.3f N·m\n', optimization.bestMeanTorque);
+
+    fprintf(fid, '\n===============================================\n');
+    fprintf(fid, '\n===============================================\n');
+    
+    fclose(fid);
+    fprintf('\nResults saved to: %s\n', outputFileName);
+end

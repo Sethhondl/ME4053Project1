@@ -1,0 +1,75 @@
+=== STIRLING ENGINE CYCLE ANALYSIS RESULTS ===
+Engine Configuration:
+  Power Piston Crank Length: 25.0 mm
+  Power Piston Rod Length: 75.0 mm
+  Displacer Crank Length: 20.0 mm
+  Displacer Rod Length: 140.0 mm
+  Phase Shift: 90.0 degrees
+  Cylinder Bore: 50.0 mm
+
+Thermodynamic Conditions:
+  Hot Temperature: 900 K (627°C)
+  Cold Temperature: 300 K (27°C)
+  Regenerator Temperature: 600 K (327°C)
+  Pressure at BDC: 500.0 kPa
+
+Piston Motion Analysis:
+  Power Piston Stroke: 50.00 mm
+  Displacer Stroke: 40.00 mm
+  Power Piston Max Position: 100.00 mm
+  Displacer Max Position: 160.00 mm
+
+Volume Analysis:
+  Total Volume Range: 140.25 - 238.42 cm³
+  Compression Ratio: 1.70
+  Hot Volume Range: 32.26 - 110.80 cm³
+  Cold Volume Range: 35.61 - 163.18 cm³
+  Regenerator Volume: 20.00 cm³ (constant)
+
+Pressure Analysis (Schmidt):
+  Pressure Range: 474.63 - 1178.83 kPa
+  Mean Pressure: 730.39 kPa
+  Pressure Ratio: 2.48
+
+Torque Analysis:
+  Total Torque Range: -24.841 - 39.807 N·m
+  Mean Total Torque: 3.648 N·m
+  Power Piston Torque Range: -24.841 - 39.807 N·m
+  Mean Power Piston Torque: 3.648 N·m
+  Net Work per Cycle: 22.982 J
+
+Flywheel Analysis:
+  Required Moment of Inertia: 4.4787 kg·m²
+  Flywheel Outer Diameter: 0.887 m (886.8 mm)
+  Flywheel Inner Diameter: 0.787 m (786.8 mm)
+  Flywheel Mass: 25.47 kg
+  Flywheel Volume: 0.003286 m³ (3286.2 cm³)
+  Energy Fluctuation: 62.253 J
+
+Dynamics Analysis:
+  Angular Velocity Range: 648.9 - 650.9 RPM
+  Mean Angular Velocity: 650.0 RPM
+  Target Angular Velocity: 650.0 RPM
+  Maximum Velocity at: 350.0 degrees
+  Minimum Velocity at: 184.5 degrees
+  Actual Coefficient of Fluctuation: 0.0030
+  Target Coefficient of Fluctuation: 0.0030
+  Net Torque Range: -28.489 - 36.159 N·m
+  Load Torque: 3.648 N·m
+
+Performance Summary:
+  Ideal Work per Cycle: 94.905 J
+  Actual Work per Cycle: 22.982 J
+  Cycle Efficiency: 24.2%
+  Engine Power Output: 248.28 W (estimated from mean torque)
+  Flywheel Effectiveness: -0.3% (target Cs: 0.0030, actual Cs: 0.0030)
+  Cycle Completeness: 100.0% (pressure returns to within 1% of start)
+
+Phase Optimization:
+  Best Phase Shift: 103.6 degrees
+  Max Power: 255.80 W
+  Mean Torque at Best Phase: 3.758 N·m
+
+===============================================
+
+===============================================
