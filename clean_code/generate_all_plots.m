@@ -6,36 +6,53 @@ function generate_all_plots(results, params)
     figure('Position', [100, 100, 800, 600]);
     V_min = min(results.V_total);
     V_max = max(results.V_total);
-    m_total_ideal = results.m_total;
+    m_total = results.m_total;
     R = params.gasConstant;
 
-    P1 = m_total_ideal * R * params.coldTemperature / V_max;
+    % Convert volumes to specific volumes (m³/kg)
+    v_min = V_min / m_total;
+    v_max = V_max / m_total;
+    v_actual = results.V_total / m_total;
+
+    % Calculate ideal cycle pressures at key points
+    P1 = m_total * R * params.coldTemperature / V_max;
     P2 = P1 * (V_max / V_min);
     P3 = P2 * (params.hotTemperature / params.coldTemperature);
     P4 = P3 * (V_min / V_max);
 
+    % Create ideal cycle path in specific volume
     n_iso = 50;
-    V_12 = linspace(V_max, V_min, n_iso);
-    P_12 = P1 * V_max ./ V_12;
-    V_23 = ones(1, 20) * V_min;
+    v_12 = linspace(v_max, v_min, n_iso);
+    P_12 = P1 * v_max ./ v_12;
+    v_23 = ones(1, 20) * v_min;
     P_23 = linspace(P2, P3, 20);
-    V_34 = linspace(V_min, V_max, n_iso);
-    P_34 = P3 * V_min ./ V_34;
-    V_41 = ones(1, 20) * V_max;
+    v_34 = linspace(v_min, v_max, n_iso);
+    P_34 = P3 * v_min ./ v_34;
+    v_41 = ones(1, 20) * v_max;
     P_41 = linspace(P4, P1, 20);
 
-    V_ideal = [V_12, V_23, V_34, V_41];
+    v_ideal = [v_12, v_23, v_34, v_41];
     P_ideal = [P_12, P_23, P_34, P_41];
 
-    plot(V_ideal * 1e6, P_ideal / 1e6, 'k--', 'LineWidth', 2);
+    plot(v_ideal, P_ideal / 1e6, 'k--', 'LineWidth', 2);
     hold on;
-    plot(results.V_total * 1e6, results.P / 1e6, 'b-', 'LineWidth', 2);
-    xlabel('Volume (cm³)');
+    plot(v_actual, results.P / 1e6, 'b-', 'LineWidth', 2);
+    xlabel('Specific Volume (m³/kg)');
     ylabel('Pressure (MPa)');
-    title('P-V Diagram');
+    title('P-v Diagram');
     legend('Ideal Stirling Cycle', 'Actual Engine Cycle', 'Location', 'northeast');
     grid on;
     box on;
+    % Set appropriate limits with margins
+    v_range = v_max - v_min;
+    xlim([v_min - 0.05*v_range, v_max + 0.05*v_range]);
+
+    % Calculate appropriate y-axis limits based on actual pressure values
+    all_pressures = [P_ideal(:); results.P(:)];  % Ensure both are column vectors
+    p_min_plot = min(all_pressures) / 1e6 * 0.9;  % 10% margin below
+    p_max_plot = max(all_pressures) / 1e6 * 1.1;  % 10% margin above
+    ylim([p_min_plot, p_max_plot]);
+
     saveas(gcf, 'results/pv_diagram.png');
 
     figure('Position', [100, 300, 800, 600]);

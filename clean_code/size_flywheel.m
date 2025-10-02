@@ -18,7 +18,20 @@ function [D_outer, I_required, mass, energy_fluctuation] = size_flywheel(T_total
     E_min = min(energy_variation);
     energy_fluctuation = E_max - E_min;
 
-    I_required = energy_fluctuation / (Cs * omega_avg^2);
+    I_initial = energy_fluctuation / (Cs * omega_avg^2);
+    I_required = I_initial;
+
+    for iter_cs = 1:10
+        [~, ~, ~, Cs_actual] = simulate_dynamics(T_total, theta, I_required, params);
+
+        error_cs = abs(Cs_actual - Cs) / Cs;
+        if error_cs < 0.0001
+            break;
+        end
+
+        correction_factor = Cs_actual / Cs;
+        I_required = I_required * correction_factor;
+    end
 
     r_outer_guess = (I_required / (2 * pi * rho * w * t))^(1/3);
 

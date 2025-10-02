@@ -416,7 +416,21 @@ function [flywheel, energy_fluctuation] = size_flywheel(T_total, theta, params)
     E_min = min(energy_variation);
     energy_fluctuation = E_max - E_min;
 
-    I_required = energy_fluctuation / (Cs * omega_avg^2);
+    I_initial = energy_fluctuation / (Cs * omega_avg^2);
+    I_required = I_initial;
+
+    % Iteratively adjust inertia to achieve exact Cs
+    for iter_cs = 1:10
+        [~, ~, ~, Cs_actual] = simulate_dynamics(T_total, theta, I_required, params);
+
+        error_cs = abs(Cs_actual - Cs) / Cs;
+        if error_cs < 0.0001
+            break;
+        end
+
+        correction_factor = Cs_actual / Cs;
+        I_required = I_required * correction_factor;
+    end
 
     r_outer_guess = (I_required / (2 * pi * rho * w * t))^(1/3);
 
@@ -654,17 +668,66 @@ function generate_all_plots(results, params)
 % Description:
 %   Generates P-V diagram, torque profile, speed variation, and phase optimization plots
 
-    % P-V Diagram
+    % Ensure results directory exists
+    if ~exist('results', 'dir')
+        mkdir('results');
+    end
+
+    % P-v Diagram (using specific volume)
     figure('Position', [100, 100, 800, 600]);
-    plot(results.V_total * 1e6, results.P / 1e3, 'b-', 'LineWidth', 2);
-    xlabel('Volume (cm³)');
-    ylabel('Pressure (kPa)');
-    title('P-V Diagram - Beta-Type Stirling Engine');
-    grid on;
+
+    % Convert to specific volume (m³/kg)
+    m_total = results.m_total;
+    v_actual = results.V_total / m_total;
+
+    % Generate ideal cycle with proper boundaries
+    V_min = min(results.V_total);
+    V_max = max(results.V_total);
+    v_min = V_min / m_total;
+    v_max = V_max / m_total;
+
+    % Calculate ideal cycle pressures at key points
+    R = params.gasConstant;
+    P1 = m_total * R * params.coldTemperature / V_max;
+    P2 = P1 * (V_max / V_min);
+    P3 = P2 * (params.hotTemperature / params.coldTemperature);
+    P4 = P3 * (V_min / V_max);
+
+    % Create ideal cycle path in specific volume
+    n_iso = 50;
+    v_12 = linspace(v_max, v_min, n_iso);
+    P_12 = P1 * v_max ./ v_12;
+    v_23 = ones(1, 20) * v_min;
+    P_23 = linspace(P2, P3, 20);
+    v_34 = linspace(v_min, v_max, n_iso);
+    P_34 = P3 * v_min ./ v_34;
+    v_41 = ones(1, 20) * v_max;
+    P_41 = linspace(P4, P1, 20);
+
+    v_ideal = [v_12, v_23, v_34, v_41];
+    P_ideal = [P_12, P_23, P_34, P_41];
+
+    % Plot with boundaries
+    plot(v_ideal, P_ideal / 1e6, 'k--', 'LineWidth', 2);
     hold on;
-    [V_ideal, P_ideal] = generate_ideal_stirling_cycle(params);
-    plot(V_ideal * 1e6, P_ideal / 1e3, 'r--', 'LineWidth', 1.5);
-    legend('Actual Cycle', 'Ideal Stirling', 'Location', 'northeast');
+    plot(v_actual, results.P / 1e6, 'b-', 'LineWidth', 2);
+
+    % Add boundaries with some margin
+    v_range = v_max - v_min;
+    xlim([v_min - 0.05*v_range, v_max + 0.05*v_range]);
+
+    % Calculate appropriate y-axis limits based on actual pressure values
+    all_pressures = [P_ideal(:); results.P(:)];  % Ensure both are column vectors
+    p_min_plot = min(all_pressures) / 1e6 * 0.9;  % 10% margin below
+    p_max_plot = max(all_pressures) / 1e6 * 1.1;  % 10% margin above
+    ylim([p_min_plot, p_max_plot]);
+
+    xlabel('Specific Volume (m³/kg)');
+    ylabel('Pressure (MPa)');
+    title('P-v Diagram - Beta-Type Stirling Engine');
+    legend('Ideal Stirling Cycle', 'Actual Engine Cycle', 'Location', 'northeast');
+    grid on;
+    box on;
     saveas(gcf, 'results/pv_diagram.png');
 
     % Torque Profile
@@ -718,27 +781,9 @@ function generate_all_plots(results, params)
     saveas(gcf, 'results/velocity_variation.png');
 end
 
-function [V_ideal, P_ideal] = generate_ideal_stirling_cycle(params)
-% GENERATE_IDEAL_STIRLING_CYCLE - Generate ideal Stirling cycle for comparison
-    n_points = 100;
-    V_min = 140e-6;
-    V_max = 238e-6;
-    P_min = 475e3;
-    P_max = 1179e3;
-
-    V1 = V_min * ones(1, n_points/4);
-    V2 = linspace(V_min, V_max, n_points/4);
-    V3 = V_max * ones(1, n_points/4);
-    V4 = linspace(V_max, V_min, n_points/4);
-
-    P1 = linspace(P_max, P_min, n_points/4);
-    P2 = P_min * V_min ./ V2;
-    P3 = linspace(P_min, P_max, n_points/4);
-    P4 = P_max * V_max ./ V4;
-
-    V_ideal = [V1, V2, V3, V4];
-    P_ideal = [P1, P2, P3, P4];
-end
+% Note: The generate_ideal_stirling_cycle function has been removed
+% The ideal cycle is now generated directly in the generate_plots function
+% using specific volume (m³/kg) and actual engine parameters
 
 function display_results(results, params)
 % DISPLAY_RESULTS - Display analysis results in formatted output
