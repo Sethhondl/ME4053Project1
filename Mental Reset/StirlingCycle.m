@@ -689,102 +689,282 @@ optimization = optimizePhaseShift(theta, params);
 
 % Create figures for analysis
 figure('Name', 'Piston Positions vs Crank Angle', 'Position', [50, 50, 900, 600]);
-plot(theta*180/pi, cycleData.powerPistonPos*1000, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston');
+plot(theta*180/pi, cycleData.powerPistonPos*1000, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Power Piston');
 hold on;
-plot(theta*180/pi, cycleData.displacerPos*1000, 'r-', 'LineWidth', 2, 'DisplayName', 'Displacer');
-xlabel('Crank Angle (degrees)');
-ylabel('Position (mm)');
-title('Piston Positions vs Crank Angle');
-legend('Location', 'best');
+plot(theta*180/pi, cycleData.displacerPos*1000, 'r-', 'LineWidth', 2.5, 'DisplayName', 'Displacer');
+
+% Calculate strokes
+powerStroke = (max(cycleData.powerPistonPos) - min(cycleData.powerPistonPos))*1000;
+displacerStroke = (max(cycleData.displacerPos) - min(cycleData.displacerPos))*1000;
+
+% Add annotations for key positions - positioned to avoid line overlap
+text(10, 102, sprintf('TDC'), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(10, 50, sprintf('BDC'), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(260, 85, sprintf('Power Stroke: %.1f mm', powerStroke), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(260, 155, sprintf('Displacer Stroke: %.1f mm', displacerStroke), 'FontSize', 9, 'Color', 'r', 'BackgroundColor', 'w', 'EdgeColor', 'r');
+
+xlabel('Crank Angle (degrees)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Position (mm)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Piston Positions vs Crank Angle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
+xlim([0 360]);
+set(gca, 'FontSize', 11);
+print(gcf, 'piston_positions.png', '-dpng', '-r300');
 
-% Phase Optimization Results - separate figures (use fine grid for display)
-phaseDeg = optimization.phaseGridFine * 180/pi;
-bestPhaseDeg = optimization.bestPhaseShift * 180/pi;
+% Phase Optimization Results - use coarse grid for broad view
+phaseDeg = optimization.phaseGridCoarse * 180/pi;
+energyPerCycle = optimization.meanTorqueCoarse * 2 * pi;  % Work per cycle = Torque * angle (J)
 
-figure('Name', 'Power vs Phase Shift', 'Position', [230, 230, 900, 600]);
-plot(phaseDeg, optimization.powerFine, 'k-', 'LineWidth', 2, 'DisplayName', 'Power');
+% Find best point in coarse grid
+[bestEnergy, bestIdx] = max(energyPerCycle);
+bestPhaseDeg = phaseDeg(bestIdx);
+
+figure('Name', 'Energy per Cycle vs Phase Angle', 'Position', [230, 230, 900, 600]);
+plot(phaseDeg, energyPerCycle, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Energy per Cycle');
 hold on;
-plot(bestPhaseDeg, optimization.bestPower, 'ro', 'MarkerSize', 8, 'LineWidth', 1.5, 'DisplayName', 'Best');
-xlabel('Phase Shift (degrees)');
-ylabel('Power (W)');
-title('Power vs Phase Shift');
-legend('Location', 'best');
-grid on;
+plot(bestPhaseDeg, bestEnergy, 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r', 'LineWidth', 1.5, 'DisplayName', 'Optimal Phase Angle');
 
-figure('Name', 'Mean Torque vs Phase Shift', 'Position', [260, 260, 900, 600]);
-plot(phaseDeg, optimization.meanTorqueFine, 'b-', 'LineWidth', 2, 'DisplayName', 'Mean Torque');
-hold on;
-plot(bestPhaseDeg, optimization.bestMeanTorque, 'ro', 'MarkerSize', 8, 'LineWidth', 1.5, 'DisplayName', 'Best');
-xlabel('Phase Shift (degrees)');
-ylabel('Mean Torque (N·m)');
-title('Mean Torque vs Phase Shift');
-legend('Location', 'best');
+% Add annotation for optimal point
+text(bestPhaseDeg + 5, bestEnergy, sprintf('Optimal: %.1f°\n%.3f J', bestPhaseDeg, bestEnergy), ...
+    'FontSize', 9, 'BackgroundColor', 'w', 'EdgeColor', 'r');
+
+xlabel('Phase Angle (degrees)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Energy per Cycle (J)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Energy per Cycle vs Phase Angle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
+set(gca, 'FontSize', 11);
+print(gcf, 'energy_vs_phase.png', '-dpng', '-r300');
 
 figure('Name', 'Volumes vs Crank Angle', 'Position', [80, 80, 900, 600]);
-plot(theta*180/pi, cycleData.totalVolume*1e6, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Volume');
+plot(theta*180/pi, cycleData.totalVolume*1e6, 'k-', 'LineWidth', 2.5, 'DisplayName', 'Total Volume');
 hold on;
-plot(theta*180/pi, cycleData.hotVolume*1e6, 'r-', 'LineWidth', 2, 'DisplayName', 'Hot Volume');
-plot(theta*180/pi, cycleData.coldVolume*1e6, 'b-', 'LineWidth', 2, 'DisplayName', 'Cold Volume');
-plot(theta*180/pi, cycleData.regeneratorVolume*1e6, 'g-', 'LineWidth', 2, 'DisplayName', 'Regenerator Volume');
-xlabel('Crank Angle (degrees)');
-ylabel('Volume (cm³)');
-title('Volumes vs Crank Angle');
-legend('Location', 'best');
+plot(theta*180/pi, cycleData.hotVolume*1e6, 'r-', 'LineWidth', 2.5, 'DisplayName', 'Hot Volume');
+plot(theta*180/pi, cycleData.coldVolume*1e6, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Cold Volume');
+plot(theta*180/pi, cycleData.regeneratorVolume*1e6, 'g-', 'LineWidth', 2.5, 'DisplayName', 'Regenerator Volume');
+
+% Calculate compression ratio and volume extremes
+V_max = max(cycleData.totalVolume)*1e6;
+V_min = min(cycleData.totalVolume)*1e6;
+compressionRatio = V_max / V_min;
+
+% Find angles where max and min occur
+[~, idx_max] = max(cycleData.totalVolume);
+[~, idx_min] = min(cycleData.totalVolume);
+angle_max = theta(idx_max)*180/pi;
+angle_min = theta(idx_min)*180/pi;
+
+% Add annotations - positioned away from lines
+text(10, 210, sprintf('V_{max} = %.2f cm³', V_max), 'FontSize', 9, 'Color', 'k', 'BackgroundColor', 'w', 'EdgeColor', 'k');
+text(230, 145, sprintf('V_{min} = %.2f cm³', V_min), 'FontSize', 9, 'Color', 'k', 'BackgroundColor', 'w', 'EdgeColor', 'k');
+text(300, 210, sprintf('CR = %.2f', compressionRatio), 'FontSize', 10, 'Color', 'k', 'BackgroundColor', 'w', 'EdgeColor', 'k', 'FontWeight', 'bold');
+
+xlabel('Crank Angle (degrees)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Volume (cm³)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Volumes vs Crank Angle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
+xlim([0 360]);
+set(gca, 'FontSize', 11);
+print(gcf, 'volumes.png', '-dpng', '-r300');
 
 figure('Name', 'Pressure vs Crank Angle', 'Position', [110, 110, 900, 600]);
-plot(theta*180/pi, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Instantaneous Pressure');
+plot(theta*180/pi, cycleData.pressure/1000, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Instantaneous Pressure');
 hold on;
-plot(theta*180/pi, results.meanPressure/1000*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
-plot(theta*180/pi, results.maxPressure/1000*ones(size(theta)), 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
-plot(theta*180/pi, results.minPressure/1000*ones(size(theta)), 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
-xlabel('Crank Angle (degrees)');
-ylabel('Pressure (kPa)');
-title('Pressure vs Crank Angle');
-legend('Location', 'best');
+
+% Calculate pressure extremes and ratio
+P_max = max(cycleData.pressure)/1000;
+P_min = min(cycleData.pressure)/1000;
+pressureRatio = P_max / P_min;
+
+% Find angles where max and min occur
+[~, idx_pmax] = max(cycleData.pressure);
+[~, idx_pmin] = min(cycleData.pressure);
+angle_pmax = theta(idx_pmax)*180/pi;
+angle_pmin = theta(idx_pmin)*180/pi;
+
+% Add annotations - positioned away from curve
+text(150, 1150, sprintf('P_{max} = %.1f kPa', P_max), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(80, 500, sprintf('P_{min} = %.1f kPa', P_min), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(10, 1150, sprintf('P_{ratio} = %.2f', pressureRatio), 'FontSize', 10, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b', 'FontWeight', 'bold');
+
+xlabel('Crank Angle (degrees)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Pressure (kPa)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Pressure vs Crank Angle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
+xlim([0 360]);
+set(gca, 'FontSize', 11);
+print(gcf, 'pressure_vs_angle.png', '-dpng', '-r300');
 
 % Compute specific volume (total volume per total mass)
 m_total_system = calculateSchmidtAnalysis(0, params).totalMass;  % kg (constant over cycle)
 specificVolume = cycleData.totalVolume / m_total_system;          % m^3/kg
 
+% Calculate ideal Stirling cycle for comparison
+V_min = min(cycleData.totalVolume);
+V_max = max(cycleData.totalVolume);
+v_min_specific = V_min / m_total_system * 1e6;  % cm^3/kg
+v_max_specific = V_max / m_total_system * 1e6;  % cm^3/kg
+
+% Calculate ideal cycle pressure relationships
+% For ideal Stirling: compression ratio and temperature ratio determine pressure ratio
+r = V_max / V_min;  % Compression ratio (1.7)
+tau = params.hotTemperature / params.coldTemperature;  % Temperature ratio (3.0)
+P_ratio_total = r * tau;  % Total pressure ratio P1/P3 = 5.1
+
+% Reference the ideal cycle to the actual cycle's minimum pressure
+% Set State 3 (V_max, T_cold) as the lowest pressure reference point
+P_actual_min = results.minPressure / 1000;  % kPa
+P3_ideal = P_actual_min * 0.85;  % Set ideal cycle minimum slightly below actual minimum
+
+% Calculate all four state pressures from State 3
+% State 1: V_min, T_hot (highest pressure)
+P1_ideal = P3_ideal * P_ratio_total;  % P1/P3 = r × tau = 5.1
+
+% State 2: V_max, T_hot (isothermal expansion from State 1)
+P2_ideal = P1_ideal / r;  % P1/P2 = r (isothermal: PV = const)
+
+% State 4: V_min, T_cold (isothermal compression from State 3)
+P4_ideal = P3_ideal * r;  % P4/P3 = r (isothermal: PV = const)
+
+% Build complete ideal Stirling cycle as a closed loop
+n_iso = 100;   % Points for isothermal processes
+n_iso_v = 50;  % Points for isochoric processes
+
+% Process 1-2: Isothermal expansion at T_hot (P1*V1 = P*V)
+v_12 = linspace(v_min_specific, v_max_specific, n_iso);
+P_12 = P1_ideal * (v_min_specific ./ v_12);  % PV = constant
+
+% Process 2-3: Isochoric cooling at v_max (P/T = constant)
+v_23 = v_max_specific * ones(1, n_iso_v);
+T_23 = linspace(params.hotTemperature, params.coldTemperature, n_iso_v);
+P_23 = P2_ideal * (T_23 / params.hotTemperature);  % P/T = constant
+
+% Process 3-4: Isothermal compression at T_cold (P3*V3 = P*V)
+v_34 = linspace(v_max_specific, v_min_specific, n_iso);
+P_34 = P3_ideal * (v_max_specific ./ v_34);  % PV = constant
+
+% Process 4-1: Isochoric heating at v_min (P/T = constant)
+v_41 = v_min_specific * ones(1, n_iso_v);
+T_41 = linspace(params.coldTemperature, params.hotTemperature, n_iso_v);
+P_41 = P4_ideal * (T_41 / params.coldTemperature);  % P/T = constant
+
+% Concatenate all processes to form complete closed cycle
+v_ideal_cycle = [v_12, v_23, v_34, v_41];
+P_ideal_cycle = [P_12, P_23, P_34, P_41];
+
 figure('Name', 'P-v Diagram (Schmidt Analysis)', 'Position', [140, 140, 900, 600]);
-plot(specificVolume*1e6, cycleData.pressure/1000, 'k-', 'LineWidth', 2, 'DisplayName', 'Cycle');
+% Plot actual engine cycle
+plot(specificVolume*1e6, cycleData.pressure/1000, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Actual Engine Cycle');
 hold on;
-% Add constant pressure lines
-plot([min(specificVolume)*1e6, max(specificVolume)*1e6], [results.meanPressure/1000, results.meanPressure/1000], 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Pressure');
-plot([min(specificVolume)*1e6, max(specificVolume)*1e6], [results.maxPressure/1000, results.maxPressure/1000], 'g--', 'LineWidth', 1, 'DisplayName', 'Max Pressure');
-plot([min(specificVolume)*1e6, max(specificVolume)*1e6], [results.minPressure/1000, results.minPressure/1000], 'b--', 'LineWidth', 1, 'DisplayName', 'Min Pressure');
-xlabel('Specific Volume (cm^3/kg)');
-ylabel('Pressure (kPa)');
-title('P-v Diagram (Schmidt Analysis)');
-legend('Location', 'best');
+
+% Plot ideal Stirling cycle as single closed loop
+plot(v_ideal_cycle, P_ideal_cycle, 'r--', 'LineWidth', 2.5, 'DisplayName', 'Ideal Stirling Cycle');
+
+% Label the 4 corners of ideal Stirling cycle
+v_mid = (v_min_specific + v_max_specific) / 2;
+P_mid = (P1_ideal + P3_ideal) / 2;
+
+% Corner labels (1-4) - positioned closer to corners
+text(v_min_specific - 0.03e5, P1_ideal + 50, '1', 'FontSize', 11, 'Color', 'r', 'FontWeight', 'bold', 'BackgroundColor', 'w', 'EdgeColor', 'r');
+text(v_max_specific + 0.03e5, P2_ideal + 50, '2', 'FontSize', 11, 'Color', 'r', 'FontWeight', 'bold', 'BackgroundColor', 'w', 'EdgeColor', 'r');
+text(v_max_specific + 0.03e5, P3_ideal - 50, '3', 'FontSize', 11, 'Color', 'r', 'FontWeight', 'bold', 'BackgroundColor', 'w', 'EdgeColor', 'r');
+text(v_min_specific - 0.03e5, P4_ideal - 50, '4', 'FontSize', 11, 'Color', 'r', 'FontWeight', 'bold', 'BackgroundColor', 'w', 'EdgeColor', 'r');
+
+% Process labels with constant temperature indicators - repositioned
+text(v_mid, P1_ideal - 300, 'Isothermal Expansion (T_h)', 'FontSize', 9, 'Color', 'r', 'HorizontalAlignment', 'center', 'BackgroundColor', 'w');
+text(v_max_specific + 50, P_mid - 150, 'Isochoric Cooling', 'FontSize', 9, 'Color', 'r', 'HorizontalAlignment', 'center', 'BackgroundColor', 'w');
+text(v_mid, P3_ideal - 50, 'Isothermal Compression (T_c)', 'FontSize', 9, 'Color', 'r', 'HorizontalAlignment', 'center', 'BackgroundColor', 'w');
+text(v_min_specific - 50, P_mid + 100, 'Isochoric Heating', 'FontSize', 9, 'Color', 'r', 'HorizontalAlignment', 'center', 'BackgroundColor', 'w');
+
+xlabel('Specific Volume (cm^3/kg)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Pressure (kPa)', 'FontSize', 12, 'FontWeight', 'bold');
+title('P-v Diagram: Actual Engine vs Ideal Stirling Cycle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
-axis tight;
+
+% Set manual axis limits with padding around ideal cycle
+v_range = v_max_specific - v_min_specific;
+P_range = P1_ideal - P3_ideal;
+v_padding = v_range * 0.05;  % 5% padding on volume axis
+P_padding = P_range * 0.10;  % 10% padding on pressure axis
+
+xlim([v_min_specific - v_padding, v_max_specific + v_padding]);
+ylim([P3_ideal - P_padding, P1_ideal + P_padding]);
+
+set(gca, 'FontSize', 11);
+print(gcf, 'pv_diagram.png', '-dpng', '-r600');
 
 figure('Name', 'Torque vs Crank Angle', 'Position', [170, 170, 900, 600]);
-plot(theta*180/pi, cycleData.totalTorque, 'k-', 'LineWidth', 2, 'DisplayName', 'Total Torque');
+plot(theta*180/pi, cycleData.totalTorque, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Total Torque');
 hold on;
-plot(theta*180/pi, cycleData.powerTorque, 'b-', 'LineWidth', 2, 'DisplayName', 'Power Piston Torque');
-plot(theta*180/pi, results.meanTorque*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Torque');
-xlabel('Crank Angle (degrees)');
-ylabel('Torque (N·m)');
-title('Torque vs Crank Angle');
-legend('Location', 'best');
+plot(theta*180/pi, results.meanTorque*ones(size(theta)), 'r--', 'LineWidth', 2, 'DisplayName', 'Mean Torque');
+plot(theta*180/pi, zeros(size(theta)), 'k-', 'LineWidth', 0.5, 'HandleVisibility', 'off');  % Zero reference line
+
+% Calculate torque extremes
+T_max = max(cycleData.totalTorque);
+T_min = min(cycleData.totalTorque);
+
+% Find angles where max, min, and zero crossings occur
+[~, idx_tmax] = max(cycleData.totalTorque);
+[~, idx_tmin] = min(cycleData.totalTorque);
+angle_tmax = theta(idx_tmax)*180/pi;
+angle_tmin = theta(idx_tmin)*180/pi;
+
+% Find zero crossings
+zero_crossings = find(diff(sign(cycleData.totalTorque)));
+if ~isempty(zero_crossings) && length(zero_crossings) >= 2
+    zero1 = theta(zero_crossings(1))*180/pi;
+    zero2 = theta(zero_crossings(2))*180/pi;
+    plot(zero1, 0, 'ko', 'MarkerSize', 6, 'MarkerFaceColor', 'k', 'HandleVisibility', 'off');
+    plot(zero2, 0, 'ko', 'MarkerSize', 6, 'MarkerFaceColor', 'k', 'HandleVisibility', 'off');
+end
+
+% Add annotations - positioned away from curve
+text(280, 37, sprintf('T_{max} = %.3f N·m', T_max), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(130, -27, sprintf('T_{min} = %.3f N·m', T_min), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+
+xlabel('Crank Angle (degrees)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Torque (N·m)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Torque vs Crank Angle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
+xlim([0 360]);
+set(gca, 'FontSize', 11);
+print(gcf, 'torque_vs_angle.png', '-dpng', '-r600');
 
 figure('Name', 'Angular Velocity vs Crank Angle', 'Position', [200, 200, 900, 600]);
-plot(theta*180/pi, dynamics.rpm, 'k-', 'LineWidth', 2, 'DisplayName', 'Angular Velocity');
+plot(theta*180/pi, dynamics.rpm, 'b-', 'LineWidth', 2.5, 'DisplayName', 'Angular Velocity');
 hold on;
-plot(theta*180/pi, results.meanAngularVelocity*ones(size(theta)), 'r--', 'LineWidth', 1.5, 'DisplayName', 'Mean Velocity');
-plot(theta*180/pi, params.averageRPM*ones(size(theta)), 'g--', 'LineWidth', 1, 'DisplayName', 'Target Velocity');
-xlabel('Crank Angle (degrees)');
-ylabel('Angular Velocity (RPM)');
-title('Angular Velocity vs Crank Angle');
-legend('Location', 'best');
+plot(theta*180/pi, params.averageRPM*ones(size(theta)), 'r--', 'LineWidth', 2, 'DisplayName', 'Target Velocity');
+
+% Calculate RPM extremes and Cs
+RPM_max = max(dynamics.rpm);
+RPM_min = min(dynamics.rpm);
+RPM_mean = mean(dynamics.rpm);
+Cs_actual = dynamics.coefficientOfFluctuation;
+
+% Find angles where max and min occur
+[~, idx_rpmmax] = max(dynamics.rpm);
+[~, idx_rpmmin] = min(dynamics.rpm);
+angle_rpmmax = theta(idx_rpmmax)*180/pi;
+angle_rpmmin = theta(idx_rpmmin)*180/pi;
+
+% Add annotations - positioned away from curve
+text(10, 650.85, sprintf('%.1f RPM', RPM_max), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(200, 648.85, sprintf('%.1f RPM', RPM_min), 'FontSize', 9, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b');
+text(240, 650.85, sprintf('C_s = %.4f', Cs_actual), 'FontSize', 10, 'Color', 'b', 'BackgroundColor', 'w', 'EdgeColor', 'b', 'FontWeight', 'bold');
+
+xlabel('Crank Angle (degrees)', 'FontSize', 12, 'FontWeight', 'bold');
+ylabel('Angular Velocity (RPM)', 'FontSize', 12, 'FontWeight', 'bold');
+title('Rotational Velocity vs Crank Angle', 'FontSize', 14, 'FontWeight', 'bold');
+legend('Location', 'best', 'FontSize', 10);
 grid on;
+xlim([0 360]);
+set(gca, 'FontSize', 11);
+print(gcf, 'angular_velocity.png', '-dpng', '-r600');
 
 % Display comprehensive analysis results
 fprintf('\n=== STIRLING ENGINE CYCLE ANALYSIS RESULTS ===\n');
