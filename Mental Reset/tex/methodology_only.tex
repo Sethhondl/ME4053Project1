@@ -1,67 +1,13 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx}
-\usepackage{caption}
-\usepackage{float}
-\usepackage{setspace}
-\usepackage{booktabs}
-\usepackage{siunitx}
 \usepackage{amsmath, amssymb}
-\usepackage{hyperref}
-\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\usepackage{siunitx}
 \sisetup{per-mode=symbol,detect-all=true}
+\usepackage{setspace}
 \onehalfspacing
-\title{A Computational Analysis of a Set Parameter Beta-Type Stirling Engine\\and Flywheel Design Optimization}
-\author{Thomas Ritten \and Sebastian Hondl \and Peyton Lettau}
-\date{Group 29 -- ME4051 -- 9/20/25}
+
 \begin{document}
-\maketitle
-\section*{Abstract}
-The effectiveness of an energy conversion system is often defined by its losses: what causes them, how significant they are, and how they can be reduced to improve overall system performance. For Beta-type Stirling engines, we examine work generation in real versus ideal conditions, torque balance across the cycle, crankshaft speed fluctuation, and phase angle sensitivity. We also size a flywheel to meet a target coefficient of fluctuation given material and geometric constraints.
 
-\section{Introduction}
-Stirling engines provide a straightforward yet effective method of converting heat into mechanical work. To evaluate performance, we analyze each phase of the cycle versus crank angle \(\theta\), comparing pressure, volume, work, and torque distributions. Beyond the thermodynamic cycle, the flywheel must supply sufficient inertia to maintain near-constant angular velocity without overloading the system.
-
-\section{Given Parameters}
-Key parameters used throughout the analysis are summarized below.
-\begin{table}[H]
-  \centering
-  \caption{Initial engine and operating parameters (given).}
-  \label{tab:params}
-  \begin{tabular}{@{}llll@{}}
-    \toprule
-    \textbf{Parameter} & \textbf{Symbol} & \textbf{Value} & \textbf{Units} \\
-    \midrule
-    Power piston crank length & $r_{p}$ & \num{0.025} & \si{\meter} \\
-    Power piston connecting rod & $\ell_{p}$ & \num{0.075} & \si{\meter} \\
-    Displacer crank length & $r_{d}$ & \num{0.02} & \si{\meter} \\
-    Displacer connecting rod & $\ell_{d}$ & \num{0.14} & \si{\meter} \\
-    Displacer volume & $V_{d}$ & \num{4.0e-5} & \si{\meter\cubed} \\
-    Cylinder bore diameter & $D$ & \num{0.05} & \si{\meter} \\
-    Phase shift & $\phi$ & $\pi/2$ & \si{\radian} \\
-    Compression ratio & $\mathrm{CR}$ & \num{1.7} & --- \\
-    Hot temperature & $T_{h}$ & \num{900} & \si{\kelvin} \\
-    Cold temperature & $T_{c}$ & \num{300} & \si{\kelvin} \\
-    Gas pressure at BDC & $P_{\mathrm{BDC}}$ & \num{500} & \si{\kilo\pascal} (abs) \\
-    Atmospheric pressure & $P_{\mathrm{atm}}$ & \num{101.3} & \si{\kilo\pascal} (abs) \\
-    Regenerator dead volume & $V_{\mathrm{reg}}$ & \num{2.0e-5} & \si{\meter\cubed} \\
-    Flywheel width & $w$ & \num{0.025} & \si{\meter} \\
-    Flywheel rim thickness & $t$ & \num{0.05} & \si{\meter} \\
-    Flywheel material density & $\rho$ & \num{8000} & \si{\kilo\gram\per\meter\cubed} \\
-    Coefficient of fluctuation & $C_{f}$ & \num{0.003} & --- \\
-    Average rotational speed & $\overline{\Omega}$ & \num{650} & \si{rpm} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\section{Stirling Engine Overview}
-Figure~\ref{fig:stirling} shows the Beta-type Stirling engine schematic used in this study.
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.9\linewidth]{figures/stirling.png}
-  \caption{Stirling engine diagram.}
-  \label{fig:stirling}
-\end{figure}
 \section{Methodology}
 We begin by discretizing the crank angle as \(\theta \in [0,2\pi)\) with 360 evenly spaced points. With equal bore diameters, the cross-sectional area is \(A = \pi D^{2}/4\).
 
@@ -144,12 +90,4 @@ We then normalize \(\Omega\) to recover the target average. This normalization i
 \subsection{Step 7: Phase Optimization}
 Finally, we optimize the phase shift to maximize power output. We perform a three-stage search over \(\phi\): first, a coarse scan from \(30^{\circ}\) to \(150^{\circ}\) in \(2^{\circ}\) steps to find a good neighborhood. Then, we zoom in with a medium scan within \(\pm6^{\circ}\) of the coarse best at \(0.1^{\circ}\) resolution. Finally, we pinpoint the optimum with a fine scan within \(\pm0.5^{\circ}\) at \(0.01^{\circ}\) resolution. At each phase, we compute mean torque integrated over \(\theta\), calculate power as \(\bar{\tau}\,\omega_{\!\text{avg}}\), and select the \(\phi\) that maximizes power.
 
-\section{Results}
-Results include $p$--$V$ work, torque versus crank angle, phase sensitivity, and flywheel size meeting the specified coefficient of fluctuation. Plots are omitted here.
-
-\section{Discussion}
-The analysis highlights sensitivity to phase shift and clearance volumes. Idealized assumptions (Schmidt analysis, isothermal zones) tend to overpredict work; incorporating losses would reduce predicted performance.
-
-\section{Conclusion}
-We reproduced a codified analysis of a Beta-type Stirling engine, sized a flywheel to achieve a target fluctuation coefficient, and identified an optimal phase shift to maximize cycle work. Future work should incorporate non-ideal heat transfer and frictional losses.
 \end{document}
