@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  2 OCT 2025 15:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.8)  2 OCT 2025 21:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -524,17 +524,17 @@ al/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}]
 [4]
 
 [5]
-<../pv_diagram.png, id=143, 677.53125pt x 451.6875pt>
+<../pv_diagram.png, id=147, 677.53125pt x 451.6875pt>
 File: ../pv_diagram.png Graphic file (type png)
 <use ../pv_diagram.png>
 Package pdftex.def Info: ../pv_diagram.png  used on input line 149.
 (pdftex.def)             Requested size: 375.80544pt x 250.54478pt.
-<../torque_vs_angle.png, id=145, 677.53125pt x 451.6875pt>
+<../torque_vs_angle.png, id=149, 677.53125pt x 451.6875pt>
 File: ../torque_vs_angle.png Graphic file (type png)
 <use ../torque_vs_angle.png>
 Package pdftex.def Info: ../torque_vs_angle.png  used on input line 161.
 (pdftex.def)             Requested size: 375.80544pt x 250.54478pt.
-<../angular_velocity.png, id=147, 677.53125pt x 451.6875pt>
+<../angular_velocity.png, id=151, 677.53125pt x 451.6875pt>
 File: ../angular_velocity.png Graphic file (type png)
 <use ../angular_velocity.png>
 Package pdftex.def Info: ../angular_velocity.png  used on input line 173.
@@ -542,7 +542,7 @@ Package pdftex.def Info: ../angular_velocity.png  used on input line 173.
 
 
 [6 <../pv_diagram.png (PNG copy)>]
-<../energy_vs_phase.png, id=155, 677.6517pt x 451.6875pt>
+<../energy_vs_phase.png, id=160, 677.6517pt x 451.6875pt>
 File: ../energy_vs_phase.png Graphic file (type png)
 <use ../energy_vs_phase.png>
 Package pdftex.def Info: ../energy_vs_phase.png  used on input line 187.
@@ -561,16 +561,16 @@ LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 6A8E11F2E5C4FAA5C9412E424EDBBFEA;4270.
+(rerunfilecheck)             Checksum: D0256639DAD2728222433A1B9F496930;4364.
  ) 
 Here is how much of TeX's memory you used:
- 15730 strings out of 473190
- 307450 string characters out of 5715801
- 672565 words of memory out of 5000000
- 38779 multiletter control sequences out of 15000+600000
+ 15738 strings out of 473190
+ 307556 string characters out of 5715801
+ 672560 words of memory out of 5000000
+ 38782 multiletter control sequences out of 15000+600000
  568274 words of font info for 72 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,14n,82p,800b,1050s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,14n,82p,863b,1050s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 ></usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
 </usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><
@@ -582,10 +582,10 @@ l/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local
 /texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/t
 exlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/tex
 live/2025/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
-Output written on report.pdf (10 pages, 1225267 bytes).
+Output written on report.pdf (10 pages, 1227076 bytes).
 PDF statistics:
- 238 PDF objects out of 1000 (max. 8388607)
- 198 compressed objects within 2 object streams
- 54 named destinations out of 1000 (max. 500000)
- 197 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 248 PDF objects out of 1000 (max. 8388607)
+ 207 compressed objects within 3 object streams
+ 59 named destinations out of 1000 (max. 500000)
+ 205 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -17,7 +17,7 @@
 \begin{document}
 \maketitle
 \section*{Executive Summary}
-This report presents a comprehensive computational analysis of a Beta-type Stirling engine with integrated flywheel design optimization. The analysis employs Schmidt thermodynamic modeling, slider-crank kinematics, and three-stage phase optimization to evaluate engine performance and design requirements. Key findings include a cycle efficiency of 24.2\% compared to ideal conditions, optimal phase shift of 103.6° (13.6° above conventional 90°), and successful flywheel design achieving the target coefficient of fluctuation of 0.003. The systematic methodology provides a foundation for parametric studies and design optimization of Stirling engines, while highlighting the significant performance gaps between idealized assumptions and practical implementation.
+This report presents a comprehensive computational analysis of a Beta-type Stirling engine with integrated flywheel design optimization. The analysis employs Schmidt thermodynamic modeling, slider-crank kinematics, and three-stage phase optimization to evaluate engine performance and design requirements. Key findings include a cycle efficiency of 24.2\% compared to ideal conditions, \underline{optimal phase shift of 103.6°} (13.6° above conventional 90°), and successful flywheel design achieving the target coefficient of fluctuation of 0.003 with a \underline{final outer diameter of 0.887 m}. The systematic methodology provides a foundation for parametric studies and design optimization of Stirling engines, while highlighting the significant performance gaps between idealized assumptions and practical implementation.
 
 \section{Introduction}
 Beta-type Stirling engines represent a promising technology for waste heat recovery and distributed power generation. This analysis evaluates the complete thermodynamic and dynamic behavior of a specified engine configuration, examining work generation, torque characteristics, speed regulation, and phase optimization. The study employs systematic computational methods to assess both ideal and actual performance, providing insights into design optimization and practical implementation challenges.
@@ -191,8 +191,6 @@ The phase optimization analysis, shown in Figure~\ref{fig:energy_phase}, reveals
 
 The optimization reveals an optimal phase angle of 103.6°, providing maximum power output and representing a 13.6° deviation from the conventional 90° approximation. This significant deviation demonstrates the importance of systematic optimization over simplified assumptions. The three-stage refinement strategy achieves 0.01° resolution for precise optimal point determination.
 
-% (Condensed: key findings and requirement assessment are synthesized in the Conclusion to save space.)
-
 \section{Conclusions and Recommendations}
 This analysis successfully demonstrates the complete thermodynamic and dynamic behavior of a Beta-type Stirling engine through systematic computational modeling. The methodology establishes a comprehensive framework where all system variables are expressed as functions of crank angle, enabling parametric studies and design optimization.
 
@@ -211,5 +209,16 @@ The flywheel design requirements are substantial but reasonable for the system s
 The analysis successfully addresses all specified design requirements. \textbf{Requirements Met:} Flywheel design (4.48 kg·m² moment of inertia, achieving target coefficient of fluctuation of 0.003), power output analysis using two methods (ideal Stirling cycle: 94.9 J/cycle, Schmidt analysis: 23.0 J/cycle), systematic phase optimization identifying optimal angle of 103.6°, and effective speed regulation maintaining 650 RPM ± 1.0 RPM.
 
 \textbf{Performance Limitations:} 24.2\% cycle efficiency indicates significant losses from dead volumes and non-ideal processes. Actual power (23.0 J/cycle) substantially below ideal (94.9 J/cycle) due to Schmidt analysis limitations. Simplified isothermal assumptions overpredict performance compared to real-world conditions.
+
+\section{References}
+\begin{enumerate}
+\item Anderson, M., \& Severson, E. (2025). ME 4053: Fall 2025 Project 1 - Stirling Engine Analysis \& Flywheel Design. Mechanical Engineering Department, University of Minnesota, September 9th, 2025.
+\item Anderson, M., \& Severson, E. (2025). Appendix B: Problem specifications. Mechanical Engineering Department, University of Minnesota.
+\item Anthropic. (2024). Claude AI Assistant. Retrieved from https://claude.ai
+\item OpenAI. (2024). ChatGPT AI Assistant. Retrieved from https://chat.openai.com
+\end{enumerate}
+
+\vspace{1em}
+\noindent\textbf{AI Disclaimer:} This report was prepared with the assistance of artificial intelligence tools for code development,data processing, and document formatting. All technical calculations, engineering analysis, and conclusions presented have been validated by the authors. The AI assistance was used solely to enhance the efficiency of the analysis process and does not compromise the accuracy or academic integrity of this work.
 
 \end{document}
