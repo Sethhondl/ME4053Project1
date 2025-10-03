@@ -1,4 +1,22 @@
 %% Stirling Engine Cycle Problem
+% Comprehensive analysis and visualization of a beta-type Stirling engine
+% using Schmidt analysis and simple slider-crank kinematics. The script:
+%   - Defines engine geometry, operating conditions, and simulation params
+%   - Computes piston positions, volumes, pressure, torque over a full cycle
+%   - Sizes a flywheel to meet a target coefficient of fluctuation (C_s)
+%   - Simulates angular velocity variation with the sized flywheel
+%   - Optimizes phase shift via a three-stage coarse-to-fine search (to 0.01°)
+%   - Generates figures and writes a summary of results to a text file
+%
+% Usage:
+%   - Run the script as-is to reproduce the analysis and figures
+%   - Adjust values in the Prescribed Parameters sections as needed
+%
+% Output artifacts (written to the working directory):
+%   - PNG figures: piston_positions.png, energy_vs_phase.png, volumes.png,
+%                  pressure_vs_angle.png, pv_diagram.png, torque_vs_angle.png,
+%                  angular_velocity.png
+%   - Text report: stirling_engine_analysis_results.txt
 
 clear; clc; close all;
 
@@ -599,6 +617,11 @@ params.flywheelConvergenceTolerance = 1e-3;   % Relative error tolerance for ine
 
 %% Assisting Calculations
 
+% Derived geometric and thermodynamic constants used throughout the analysis.
+% These convert intuitive inputs (e.g., bore, volumes, compression ratio) into
+% quantities directly consumed by the kinematics and Schmidt calculations.
+% Values in this section are computed once and treated as fixed thereafter.
+
 % Cylinder cross-sectional area
 params.cylinderCrossSectionalArea = pi/4*(params.cylinderBore)^2;
 
@@ -649,7 +672,9 @@ cycleData.pressure = zeros(size(theta));
 cycleData.totalTorque = zeros(size(theta));
 cycleData.powerTorque = zeros(size(theta));
 
-% Calculate all data for each crank angle
+% Main cycle sweep: compute kinematics (positions), thermodynamics (pressure),
+% and mechanics (torque) at each crank angle. These arrays form the basis for
+% subsequent visualization, energy calculations, and flywheel/dynamics sizing.
 for i = 1:length(theta)
     % Calculate piston positions
     cycleData.powerPistonPos(i) = calculatePistonPosition(theta(i), params, true);
@@ -816,6 +841,13 @@ print(gcf, 'pressure_vs_angle.png', '-dpng', '-r300');
 % Compute specific volume (total volume per total mass)
 m_total_system = calculateSchmidtAnalysis(0, params).totalMass;  % kg (constant over cycle)
 specificVolume = cycleData.totalVolume / m_total_system;          % m^3/kg
+
+%% Ideal Stirling Cycle Reference
+% Build a reference P–v diagram for an ideal Stirling cycle using the same
+% volume bounds and temperatures. This provides a visual benchmark against the
+% actual cycle predicted by Schmidt analysis and kinematics.
+% The ideal cycle comprises: isothermal expansion (hot), isochoric cooling,
+% isothermal compression (cold), and isochoric heating.
 
 % Calculate ideal Stirling cycle for comparison
 V_min = min(cycleData.totalVolume);
@@ -1060,6 +1092,11 @@ fprintf('  Mean Torque at Best Phase: %.3f N·m\n', optimization.bestMeanTorque)
 fprintf('\n===============================================\n');
 fprintf('\n===============================================\n');
 
+% --------------------------------------------------------------
+% Save Results to Text File
+% Write a persistent, human-readable summary of inputs and results to
+% 'stirling_engine_analysis_results.txt' for inclusion in reports.
+% --------------------------------------------------------------
 % Save output to text file
 outputFileName = 'stirling_engine_analysis_results.txt';
 fid = fopen(outputFileName, 'w');
