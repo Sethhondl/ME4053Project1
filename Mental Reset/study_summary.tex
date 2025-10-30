@@ -1,0 +1,102 @@
+% Stirling Engine Study Summary (ME4053 Project 1)
+% Group 29 — Beta-type Stirling Engine & Flywheel Optimization
+% Quick reference for exam studying
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{siunitx}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue}
+\sisetup{per-mode=symbol,detect-all=true}
+\setlist{nosep,leftmargin=*}
+\begin{document}
+\section*{Stirling Engine Study Summary}
+\subsection*{Given Parameters (from code/report)}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Value} & \textbf{Units} \\
+\midrule
+Power piston crank & $r_p$ & \num{0.025} & \si{m} \\
+Power connecting rod & $\ell_p$ & \num{0.075} & \si{m} \\
+Displacer crank & $r_d$ & \num{0.020} & \si{m} \\
+Displacer rod & $\ell_d$ & \num{0.140} & \si{m} \\
+Displacer volume & $V_d$ & \num{4.0e-5} & \si{m^3} \\
+Cylinder bore & $D$ & \num{0.050} & \si{m} \\
+Compression ratio & CR & \num{1.70} & --- \\
+Temps (hot/cold) & $T_h/T_c$ & \num{900}/\num{300} & \si{K} \\
+BDC pressure (abs) & $P_{\text{BDC}}$ & \num{500} & \si{kPa} \\
+Atmospheric (abs) & $P_{\text{atm}}$ & \num{101.3} & \si{kPa} \\
+Average speed & $\overline{\Omega}$ & \num{650} & \si{rpm} \\
+Coeff. fluctuation & $C_f$ & \num{0.003} & --- \\
+Flywheel (w, t, $\rho$) & & \num{0.025}, \num{0.050}, \num{7750} & \si{m}, \si{m}, \si{kg/m^3} \\
+\bottomrule
+\end{tabular}
+
+\subsection*{Core Kinematics}
+Cross-sectional area: $A = \pi D^2/4$. Rod-obliquity and slider-crank for position at angle $\theta$ and crank $r$, rod $\ell$:
+\begin{align}
+\beta(\theta) &= \arcsin\!\left(\frac{r}{\ell}\sin\theta\right), & x(\theta) &= \ell\cos\beta(\theta) - r\cos\theta.
+\end{align}
+Displacer is phase-shifted by $\phi$: $x_d(\theta) = x(\theta+\phi)$, power piston $x_p(\theta)=x(\theta)$.
+
+\subsection*{Volumes}
+Cold and hot heights and volumes:
+\begin{align}
+ h_c(\theta) &= [x_d(\theta+\phi)-x_p(\theta)] - h_{\text{pin}} - \tfrac{1}{2}h_d, & V_c(\theta) = A\,h_c(\theta),\\
+ h_h(\theta) &= H_{\text{tot}} - \tfrac{1}{2}h_d - x_d(\theta+\phi), & V_h(\theta) = A\,h_h(\theta).
+\end{align}
+Regenerator volume $V_r$ is constant.
+
+\subsection*{Schmidt Analysis (isothermal, ideal gas)}
+Total gas mass at BDC:
+\[ m \,=\, \frac{P_{\text{BDC}}}{R}\Big( \frac{V_c(0)}{T_c} + \frac{V_r}{T_r} + \frac{V_h(0)}{T_h} \Big). \]
+Instantaneous pressure:
+\[ P(\theta) \,=\, \frac{mR}{\dfrac{V_c(\theta)}{T_c}+\dfrac{V_r}{T_r}+\dfrac{V_h(\theta)}{T_h}}. \]
+Net axial force on power piston: $F_p(\theta)=(P(\theta)-P_{\text{atm}})A$. Torque:
+\[ \tau(\theta) \,=\, -\,F_p(\theta)\,\frac{r_p\,\sin\theta}{\cos\beta(\theta)}. \]
+
+\subsection*{Cycle Work, Power, Efficiency}
+Work per cycle (trapz over angle): $W = \oint \tau\,\mathrm{d}\theta \approx \sum_k \tau(\theta_k)\,\Delta\theta$. Power: $P = \overline{\tau}\,\omega_{\text{avg}}$. Ideal Stirling work reference: $W_{\text{ideal}} = mR\,(T_h-T_c)\,\ln(V_{\max}/V_{\min})$. Efficiency: $\eta = W/W_{\text{ideal}}$.
+
+\subsection*{Flywheel Sizing}
+Torque deviation $T_{\text{dev}} = \tau - \overline{\tau}$, energy fluctuation $\Delta E =$ peak-to-peak of $\int T_{\text{dev}}\,\mathrm{d}\theta$. Required inertia:
+\[ I_{\text{req}} = \frac{\Delta E}{C_f\,\omega_{\text{avg}}^2}. \]
+Thick-rim model with outer radius $R$ and inner $R_{\text{in}}=R-t$:
+\[ I_{\text{rim}} = \tfrac{1}{2}M(R)\,(R^2+R_{\text{in}}^2),\quad M=\rho\,\pi w\,(R^2-R_{\text{in}}^2). \]
+Solve $I_{\text{rim}}=I_{\text{req}}$ via fixed-point update $R\leftarrow R\,\eta^{1/3}$ with $\eta=I_{\text{req}}/I_{\text{act}}$.
+
+\subsection*{Dynamics}
+Steady load torque $T_{\text{load}}=\overline{\tau}$. Using work-energy with cumulative work $W_{\text{net}}(\theta)=\int (\tau-T_{\text{load}})\,\mathrm{d}\theta$:
+\[ \Omega^2(\theta)=\Omega_{\text{avg}}^2 + \frac{2W_{\text{net}}(\theta)}{I},\quad \Omega=\sqrt{\cdot}\,;\text{ then normalize to maintain }\overline{\Omega}. \]
+
+\subsection*{Phase Optimization (three-stage, to 0.01°)}
+Coarse: $\phi\in[\ang{30},\ang{150}]$ step $\ang{2}$; Medium: $\pm\ang{6}$ around best at $\ang{0.1}$; Fine: $\pm\ang{0.5}$ at $\ang{0.01}$. Select $\phi$ maximizing $\overline{\tau}\,\omega_{\text{avg}}$.
+
+\subsection*{Key Results (from run)}
+\begin{itemize}
+  \item Volume ranges (total/hot/cold): \num{140.25}–\num{238.42} cm\textsuperscript{3}; \num{32.26}–\num{110.80} cm\textsuperscript{3}; \num{35.61}–\num{163.18} cm\textsuperscript{3}; CR=\num{1.70}.
+  \item Pressure range/mean/ratio: \num{474.63}–\num{1178.83} \si{kPa}, \num{730.39} \si{kPa}, ratio \num{2.48}.
+  \item Torque: min/max \num{-24.841}/\num{39.807} \si{N.m}; mean \num{3.648} \si{N.m}; work/cycle \num{22.982} \si{J}.
+  \item Ideal work \num{94.905} \si{J}; efficiency \num{24.2}\%.
+  \item Power (mean-torque method) \num{248.28} \si{W} at \num{650} \si{rpm}.
+  \item Flywheel: $I_{\text{req}}=\num{4.4787} \si{kg\,m^2}$; $D_{\text{out}}=\num{0.887} \si{m}$; $D_{\text{in}}=\num{0.787} \si{m}$; mass \num{25.47} \si{kg}.
+  \item Dynamics: RPM range \num{648.9}–\num{650.9}; $C_f$ actual \num{0.0030}; $T_{\text{load}}=\num{3.648} \si{N.m}$.
+  \item Phase optimization: optimal $\phi=\ang{103.6}$; max power \num{255.80} \si{W}; mean torque at optimum \num{3.758} \si{N.m}.
+\end{itemize}
+
+\subsection*{Figures to Review}
+P–v, torque vs. angle, pressure vs. angle, volumes vs. angle, angular velocity vs. angle, energy vs. phase. See PNGs in project root.
+
+\subsection*{Common Pitfalls / Checks}
+\begin{itemize}
+  \item Use absolute pressure in Schmidt; subtract $P_{\text{atm}}$ only for net force.
+  \item Ensure consistent units (m, Pa, N, J, rad/s). Convert rpm to rad/s for $\omega$.
+  \item Phase optimization requires coarse-to-fine narrowing to reach \ang{0.01}.
+  \item Normalize speed profile after energy-based integration to match target average.
+  \item Flywheel iteration: check convergence tolerance and physical diameter limits.
+\end{itemize}
+
+\end{document}
